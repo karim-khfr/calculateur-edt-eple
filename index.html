@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outil de calcul du temps de travail EPLE</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Bibliothèque pour le PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Outil de calcul du temps de travail EPLE</h1>
+
+        <!-- Onglets -->
+        <div class="tabs">
+            <div class="tab" onclick="changerOnglet(event, 'quotite')">1. Quotité de travail</div>
+            <div class="tab" onclick="changerOnglet(event, 'horaires')">2. Horaires par période</div>
+            <div class="tab" onclick="changerOnglet(event, 'semaines')">3. Tableau des semaines</div>
+            <div class="tab" onclick="changerOnglet(event, 'resultats')">4. Résultats & Export</div>
+            <div class="tab" onclick="changerOnglet(event, 'reglementaires')">Informations réglementaires</div>
+            <div class="tab active" onclick="changerOnglet(event, 'guide')">Mode d'emploi</div>
+        </div>
+
+        <!-- Onglet 1 : Quotité de travail -->
+        <div id="quotite" class="tab-content">
+            <div class="section">
+                <div class="form-row">
+                    <div>
+                        <label for="nomAgent">Nom :</label>
+                        <input type="text" id="nomAgent" placeholder="Nom de famille">
+                    </div>
+                    <div>
+                        <label for="prenomAgent">Prénom :</label>
+                        <input type="text" id="prenomAgent" placeholder="Prénom">
+                    </div>
+             </div>
+                <h2>Quotité de travail</h2>
+                <div class="form-row">
+                    <div>
+                        <label for="quotiteSelect">Quotité (%) :</label>
+                        <select id="quotiteSelect" onchange="updateQuotiteAndResults()">
+                            <option value="100" selected>100%</option>
+                            <option value="90">90%</option>
+                            <option value="80">80%</option>
+                            <option value="70">70%</option>
+                            <option value="60">60%</option>
+                            <option value="50">50%</option>
+                            <option value="40">40%</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="heuresMaxInput">Heures à effectuer (hors fractionnement) :</label>
+                        <input type="text" id="heuresMaxInput" readonly>
+                    </div>
+                </div>
+                <p><strong>Explication :</strong> Le temps de travail annuel pour un agent à 100% est de <strong>1593h</strong> (hors fractionnement), soit <strong>1607h</strong>. Cela comprend la journée de solidarité.</p>
+            </div>
+        </div>
+
+        <!-- Onglet 2 : Horaires par période -->
+        <div id="horaires" class="tab-content">
+            <div class="section">
+                <h2>Calculateur d'heures hebdomadaires</h2>
+                <div class="calculateur-hebdo">
+                    <table id="heuresTable">
+                        <thead><tr>
+                            <th>Jour</th><th>Début matin</th><th>Fin matin</th><th>Heures matin</th>
+                            <th>Début après-midi</th><th>Fin après-midi</th><th>Heures après-midi</th><th>Total journalier</th>
+                        </tr></thead>
+                        <tbody>
+
+    <tr>
+        <td>Lundi</td><td><input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td>
+    </tr>
+
+    <tr>
+        <td>Mardi</td>
+        <td><input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td>
+    </tr>
+
+    <tr>
+        <td>Mercredi</td>
+        <td><input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td>
+    </tr>
+    <tr>
+        <td>Jeudi</td><td>
+        <input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td></tr>
+
+    <tr>
+        <td>Vendredi</td>
+        <td><input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td>
+    </tr>
+
+    <tr>
+        <td>Samedi</td>
+        <td><input type="text" class="debut-matin" placeholder="08:00" maxlength="5"></td>
+        <td><input type="text" class="fin-matin" placeholder="12:00" maxlength="5"></td>
+        <td class="heures-matin">0h 00</td>
+        <td><input type="text" class="debut-apm" placeholder="13:00" maxlength="5"></td>
+        <td><input type="text" class="fin-apm" placeholder="17:00" maxlength="5"></td>
+        <td class="heures-apm">0h 00</td>
+        <td class="total-jour">0h 00</td>
+    </tr>
+
+</tbody>
+</table>
+
+<div style="margin: 10px 0;">
+    <label for="nbPauses">Nombre de pauses de 20 minutes à inclure dans le temps de travail effectif :</label>
+    <input type="number" id="nbPauses" min="0" value="0" style="width:80px; display:inline-block; margin-left:10px;" oninput="calculerTotalHebdo()">
+</div>
+<div class="total-hebdo">Total hebdomadaire : <span id="totalHebdo">0h 00</span>
+<button onclick="copierTotalHebdo()">Copier dans le champ ci-dessous</button></div>
+</div></div>
+<div class="section">
+<h2>Horaires hebdomadaires hors vacances scolaires</h2>
+<div class="form-row"><div>
+<label for="horaireHorsVacances">Heures par semaine :</label>
+<input type="number" id="horaireHorsVacances" step="0.01" min="0" value="35.00" onchange="appliquerHorairesHorsVacances()">
+</div></div>
+<button onclick="appliquerHorairesHorsVacances()">Appliquer à toutes les semaines hors vacances</button>
+</div>
+</div>
+
+        <!-- Onglet 3 : Tableau des semaines --><!-- Onglet 3 : Tableau des semaines -->
+        <div id="semaines" class="tab-content">
+            <div class="section">
+                <h2>Tableau des semaines 2026-2027</h2>
+                <div id="tableauSemaines"></div>
+            </div>
+        </div>
+
+        <!-- Onglet 4 : Résultats & Export -->
+        <div id="resultats" class="tab-content">
+            <div class="section">
+                <h2>Récapitulatif et résultats</h2>
+                <div id="resultatsCalculs"></div>
+            </div>
+            <div class="section">
+                <h2>Export des données</h2>
+                <div class="export-buttons">
+                    <button onclick="exporterPDF()">📄 Exporter en PDF</button>
+                </div>
+            </div>
+        </div>
+	
+	<!-- Onglet 5 : Informations réglementaires -->
+<div id="reglementaires" class="tab-content">
+    <div class="section">
+        <h2>RÉFÉRENCES RÉGLEMENTAIRES</h2>
+        <ul>
+            <li>Décret n° 2000-815 du 25 août 2000</li>
+            <li>Bulletin officiel de l'Éducation nationale, spécial n° 4 du 7 février 2002</li>
+            <li>Circulaire n° 2002-007 du 21 janvier 2002 relative aux obligations de service des personnels IATOSS et d'encadrement exerçant dans les services déconcentrés ou les établissements relevant du ministère de l'Éducation nationale</li>
+            <li>Note de service ministérielle n° 2001-0112 du 3 décembre 2001 relative à la pause de 20 minutes</li>
+            <li>Note de service ministérielle n° 2005-182 du 7 novembre 2005 relative à la journée de solidarité</li>
+            <li>Circulaire ministérielle n° 2161 du 9 mai 2008 relative à la journée de solidarité</li>
+        </ul>
+
+        <hr>
+
+        <h2>RÈGLES GÉNÉRALES D'ORGANISATION DU TEMPS DE TRAVAIL</h2>
+        <h3>Repos et durée du travail</h3>
+        <ul>
+            <li>Le repos hebdomadaire est d'au moins <strong>35 heures consécutives</strong>.</li>
+            <li>Le repos quotidien est d'au moins <strong>11 heures consécutives</strong>.</li>
+            <li>L'amplitude quotidienne de travail ne peut excéder <strong>11 heures</strong>.</li>
+        </ul>
+
+        <h3>Pause de 20 minutes</h3>
+        <p>Une pause de <strong>20 minutes non fractionnable</strong> est accordée aux agents dont la journée de travail atteint <strong>6 heures</strong>.</p>
+        <p>Lorsque cette pause n'est pas prise, <strong>20 minutes du temps de restauration</strong> peuvent être comptabilisées comme temps de travail effectif, dans le cadre des obligations de service public de l'Éducation nationale.</p>
+
+        <h3>Pause méridienne</h3>
+        <p>La pause méridienne (repas) <strong>ne peut pas être incluse dans le temps de travail effectif</strong>.</p>
+
+        <h3>Service partagé</h3>
+        <p>Pour les personnels exerçant sur plusieurs sites, les temps de déplacement sont inclus dans le temps de travail, dans la limite de <strong>2 heures par jour</strong>.</p>
+
+        <hr>
+
+        <h2>VALORISATION DES HEURES TRAVAILLÉES</h2>
+        <p>Certaines périodes de travail ouvrent droit à une majoration du temps comptabilisé :</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Situation</th>
+                    <th>Coefficient appliqué</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>11e demi-journée consécutive (généralement le samedi matin)</td>
+                    <td>× 1,2</td>
+                </tr>
+                <tr>
+                    <td>Samedi après-midi, dimanche ou jour férié</td>
+                    <td>× 1,5</td>
+                </tr>
+                <tr>
+                    <td>Horaire décalé (avant 7 h ou après 19 h, pour une durée minimale de 2 h)</td>
+                    <td>× 1,2</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><em>Exemple :</em> 1 heure effectuée en horaire décalé est comptabilisée pour <strong>1 h 12</strong>.</p>
+
+        <hr>
+
+        <h2>TRAVAIL PENDANT LES CONGÉS DES ÉLÈVES</h2>
+        <p>Le travail pendant les congés scolaires est limité à <strong>25 jours maximum</strong>.</p>
+        <ul>
+            <li>Le calendrier est établi en concertation afin de concilier les nécessités de service et les souhaits des agents.</li>
+            <li>Le chef d'établissement organise le service en tenant compte des périodes de fermeture prévues.</li>
+        </ul>
+
+        <hr>
+
+        <h2>DÉCOMPTE DES JOURS FÉRIÉS</h2>
+        <h3>Jour férié comptabilisé</h3>
+        <p>Un jour férié est comptabilisé comme temps de travail effectif lorsqu'il est encadré par au moins un jour travaillé (avant ou après).</p>
+        <p>Le nombre d'heures retenu correspond à celui prévu par l'emploi du temps de la semaine concernée.</p>
+
+        <h3>Jour férié non comptabilisé</h3>
+        <p>Le jour férié n'est ni comptabilisé ni récupérable lorsqu'il :</p>
+        <ul>
+            <li>tombe un samedi ou un dimanche habituellement non travaillés ;</li>
+            <li>survient pendant une période de congés (congés annuels ou temps partiel).</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Onglet 6 : Mode d'emploi -->
+
+<div id="guide" class="tab-content active">
+
+
+<div class="section">
+
+    <button onclick="exporterGuidePDF()">
+        📄 Télécharger le guide en PDF
+    </button>
+
+    <h2>Mode d'emploi — Outil de calcul du temps de travail EPLE</h2>
+
+    <hr>
+
+    <h2>Présentation générale</h2>
+
+    <p>
+        Cet outil permet de calculer et de suivre le temps de travail annuel d'un agent d'un EPLE sur l'année scolaire 2026-2027.
+        Il est organisé en <strong>5 onglets</strong> à renseigner dans l'ordre.
+    </p>
+
+    <div class="result">
+        <strong>Bon à savoir :</strong> toutes vos saisies sont automatiquement sauvegardées dans votre navigateur.
+        Vous pouvez fermer et rouvrir la page sans perdre vos données.
+    </div>
+
+    <hr>
+
+    <h2>Onglet 1 — Quotité de travail</h2>
+
+    <p>C'est le point de départ. Renseignez :</p>
+
+    <ul>
+        <li><strong>Nom et prénom</strong> de l'agent.</li>
+        <li><strong>Quotité de travail</strong> : 100 %, 90 %, 80 %, etc.</li>
+    </ul>
+
+    <p>
+        Le champ <strong>"Heures à effectuer"</strong> se calcule automatiquement.
+    </p>
+
+    <p>
+        Exemple : un agent à 80 % doit effectuer <strong>1 274,40 h</strong> dans l'année.
+    </p>
+
+    <hr>
+
+    <h2>Onglet 2 — Horaires par période</h2>
+
+    <p>
+        Cet onglet permet de définir les horaires habituels de la semaine type de l'agent.
+    </p>
+
+    <h3>1. Saisir les horaires journaliers</h3>
+
+    <ul>
+        <li>Renseignez les heures de début et de fin pour chaque demi-journée.</li>
+        <li>Les calculs se font automatiquement.</li>
+        <li>Laissez les champs vides pour les périodes non travaillées.</li>
+    </ul>
+
+    <h3>2. Pauses de 20 minutes</h3>
+
+    <p>
+        Si l'agent bénéficie de pauses de 20 minutes comptabilisées comme temps de travail effectif,
+        indiquez leur nombre hebdomadaire.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre de pauses</th>
+                <th>Durée totale</th>
+                <th>Valeur décimale</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>1 pause</td><td>20 min</td><td>0,33 h</td></tr>
+            <tr><td>2 pauses</td><td>40 min</td><td>0,66 h</td></tr>
+            <tr><td>3 pauses</td><td>60 min</td><td>1,00 h</td></tr>
+        </tbody>
+    </table>
+
+    <h3>3. Reporter le total dans le champ hebdomadaire</h3>
+
+    <p>
+        Cliquez sur <strong>"Copier dans le champ ci-dessous"</strong> puis sur
+        <strong>"Appliquer à toutes les semaines hors vacances"</strong>.
+    </p>
+
+    <hr>
+
+    <h2>Onglet 3 — Tableau des semaines</h2>
+
+    <p>
+        Les semaines de vacances scolaires apparaissent en fond jaune.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Colonne</th>
+                <th>Usage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Heures</strong></td>
+                <td>Volume horaire hebdomadaire</td>
+            </tr>
+            <tr>
+                <td><strong>Heures Sup</strong></td>
+                <td>Heures supplémentaires</td>
+            </tr>
+            <tr>
+                <td><strong>Heures Récup</strong></td>
+                <td>Heures récupérées</td>
+            </tr>
+            <tr>
+                <td><strong>Commentaires</strong></td>
+                <td>Observations diverses</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Saisie en heures décimales</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Minutes</th>
+                <th>Valeur décimale</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>6 min</td><td>0,10</td></tr>
+            <tr><td>12 min</td><td>0,20</td></tr>
+            <tr><td>15 min</td><td>0,25</td></tr>
+            <tr><td>18 min</td><td>0,30</td></tr>
+            <tr><td>20 min</td><td>0,33</td></tr>
+            <tr><td>24 min</td><td>0,40</td></tr>
+            <tr><td>30 min</td><td>0,50</td></tr>
+            <tr><td>36 min</td><td>0,60</td></tr>
+            <tr><td>40 min</td><td>0,66</td></tr>
+            <tr><td>45 min</td><td>0,75</td></tr>
+            <tr><td>48 min</td><td>0,80</td></tr>
+            <tr><td>54 min</td><td>0,90</td></tr>
+        </tbody>
+    </table>
+
+    <p>
+        Règle générale : divisez les minutes par 60.
+        Exemple : 48 ÷ 60 = 0,80.
+    </p>
+
+    <hr>
+
+    <h2>Onglet 4 — Résultats & Export</h2>
+
+    <ul>
+        <li>Heures effectuées hors vacances scolaires</li>
+        <li>Heures effectuées pendant les vacances scolaires</li>
+        <li>Heures supplémentaires</li>
+        <li>Heures récupérées</li>
+        <li>Total général</li>
+        <li>Écart par rapport au volume de référence</li>
+    </ul>
+
+    <p>
+        Cliquez sur <strong>"Exporter en PDF"</strong> pour générer le document récapitulatif complet.
+    </p>
+
+    <hr>
+
+    <h2>Onglet 5 — Informations réglementaires</h2>
+
+    <p>
+        Cet onglet rappelle les textes de référence et les règles essentielles
+        d'organisation du temps de travail.
+    </p>
+
+    <hr>
+
+    <h2>Conseils pratiques</h2>
+
+    <ul>
+        <li>Respectez l'ordre des onglets.</li>
+        <li>Modifiez directement les semaines atypiques dans l'onglet 3.</li>
+        <li>Renseignez le nom et le prénom avant l'export PDF.</li>
+    </ul>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+<script src="js/app.js"></script>
+
+</html>
