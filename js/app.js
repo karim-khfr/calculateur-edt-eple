@@ -6,9 +6,16 @@ function changerOnglet(event, ongletId) {
         tab.classList.remove('active');
     });
 
-    document.getElementById(ongletId).classList.add('active');
-    event.currentTarget.classList.add('active');
+    const targetContent = document.getElementById(ongletId);
+    if (targetContent) {
+        targetContent.classList.add('active');
+    }
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
 
+    // Déclenchement des calculs ou générations selon l'onglet
     if (ongletId === 'semaines') {
         genererTableauSemaines();
     } else if (ongletId === 'resultats') {
@@ -191,12 +198,20 @@ function getNomVacances(debutStr, finStr) {
 // ONGLET 1 : QUOTITÉ
 // ======================
 function updateQuotiteAndResults() {
-    const quotite = parseInt(document.getElementById("quotiteSelect").value);
+    const elQuotite = document.getElementById("quotiteSelect");
+    if (!elQuotite) return;
+    
+    const quotite = parseInt(elQuotite.value);
     const heuresMax = (1593 * quotite) / 100;
-    document.getElementById("heuresMaxInput").value = heuresMax.toFixed(2) + " (" + formatHeure(heuresMax) + ")";
+    
+    const elHeuresMax = document.getElementById("heuresMaxInput");
+    if (elHeuresMax) {
+        elHeuresMax.value = heuresMax.toFixed(2) + " (" + formatHeure(heuresMax) + ")";
+    }
     window.currentQuotite = quotite;
 
-    if (document.getElementById("resultats").classList.contains("active")) {
+    const elResultats = document.getElementById("resultats");
+    if (elResultats && elResultats.classList.contains("active")) {
         calculerResultats();
     }
 }
@@ -284,6 +299,7 @@ function appliquerHorairesHorsVacances() {
 // ======================
 function genererTableauSemaines() {
     const tableau = document.getElementById("tableauSemaines");
+    if (!tableau) return;
     tableau.innerHTML = "";
 
     const table = document.createElement("table");
@@ -299,6 +315,9 @@ function genererTableauSemaines() {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    const horaireBaseInput = document.getElementById("horaireHorsVacances");
+    const horaireDefault = horaireBaseInput ? horaireBaseInput.value : "0.00";
+
     semaines.forEach(semaine => {
         const debut = formaterDate(semaine.debut);
         const fin = formaterDate(semaine.fin);
@@ -310,7 +329,7 @@ function genererTableauSemaines() {
         }
 
         const semaineData = tableauSemainesData[semaine.num] || {};
-        const heures = semaineData.heures !== undefined ? semaineData.heures.toFixed(2) : (result.enVacances ? "0.00" : document.getElementById("horaireHorsVacances").value);
+        const heures = semaineData.heures !== undefined ? semaineData.heures.toFixed(2) : (result.enVacances ? "0.00" : horaireDefault);
         const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup.toFixed(2) : "0.00";
         const heuresRecup = semaineData.heuresRecup !== undefined ? semaineData.heuresRecup.toFixed(2) : "0.00";
         const comment = semaineData.comment !== undefined ? semaineData.comment : "";
@@ -368,13 +387,16 @@ function calculerResultats() {
     let totalHeuresSup = 0;
     let totalHeuresRecup = 0;
 
+    const horaireBaseInput = document.getElementById("horaireHorsVacances");
+    const horaireDefault = horaireBaseInput ? parseFloat(horaireBaseInput.value) || 0 : 0;
+
     semaines.forEach(semaine => {
         const semaineData = tableauSemainesData[semaine.num] || {};
         const debut = formaterDate(semaine.debut);
         const fin = formaterDate(semaine.fin);
         const result = estEnVacances(debut, fin);
 
-        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : parseFloat(document.getElementById("horaireHorsVacances").value) || 0);
+        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : horaireDefault);
         const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup : 0;
         const heuresRecup = semaineData.heuresRecup !== undefined ? semaineData.heuresRecup : 0;
 
@@ -391,6 +413,8 @@ function calculerResultats() {
     const difference = totalHeures - tempsBase;
 
     const resultatsDiv = document.getElementById("resultatsCalculs");
+    if (!resultatsDiv) return;
+
     resultatsDiv.innerHTML = `
         <div class="result">
             <p><strong>Quotité :</strong> ${quotiteValue}%</p>
@@ -428,14 +452,14 @@ async function exporterPDF() {
 
     doc.setFontSize(12);
     const quotiteValue = window.currentQuotite || 100;
-    const heuresMaxValue = document.getElementById("heuresMaxInput").value;
+    const heuresMaxValue = document.getElementById("heuresMaxInput") ? document.getElementById("heuresMaxInput").value : "";
 
     doc.text(`Quotité: ${quotiteValue}%`, 20, 40);
     doc.text(`Heures annuelles: ${heuresMaxValue}`, 20, 50);
     doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 60);
     
-    const nomAgent = document.getElementById("nomAgent").value || "_____________";
-    const prenomAgent = document.getElementById("prenomAgent").value || "_____________";
+    const nomAgent = (document.getElementById("nomAgent") && document.getElementById("nomAgent").value) || "_____________";
+    const prenomAgent = (document.getElementById("prenomAgent") && document.getElementById("prenomAgent").value) || "_____________";
     doc.text(`Agent: ${prenomAgent} ${nomAgent}`, 20, 70);
 
     doc.setFontSize(11);
@@ -464,13 +488,14 @@ async function exporterPDF() {
 
     const yAfterHoraires = doc.previousAutoTable.finalY + 5;
     const semainesData = [];
+    const horaireDefault = document.getElementById("horaireHorsVacances") ? parseFloat(document.getElementById("horaireHorsVacances").value) || 0 : 0;
 
     semaines.forEach(semaine => {
         const semaineData = tableauSemainesData[semaine.num] || {};
         const heures = semaineData.heures ?? (estEnVacances(
             formaterDate(semaine.debut),
             formaterDate(semaine.fin)
-        ).enVacances ? 0 : parseFloat(document.getElementById("horaireHorsVacances").value) || 0);
+        ).enVacances ? 0 : horaireDefault);
 
         semainesData.push([
             semaine.num,
@@ -503,7 +528,7 @@ async function exporterPDF() {
         const fin = formaterDate(semaine.fin);
         const result = estEnVacances(debut, fin);
 
-        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : parseFloat(document.getElementById("horaireHorsVacances").value) || 0);
+        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : horaireDefault);
         const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup : 0;
         const heuresRecup = semaineData.heuresRecup !== undefined ? semaineData.heuresRecup : 0;
 
@@ -535,8 +560,8 @@ async function exporterPDF() {
 
     doc.setFontSize(10);
     doc.text("Agent", 20, y + 15);
-    doc.text(`Nom : ${document.getElementById("nomAgent").value || "________________"}`, 20, y + 25);
-    doc.text(`Prénom : ${document.getElementById("prenomAgent").value || "________________"}`, 20, y + 30);
+    doc.text(`Nom : ${nomAgent}`, 20, y + 25);
+    doc.text(`Prénom : ${prenomAgent}`, 20, y + 30);
     doc.text("Signature :", 20, y + 35);
 
     doc.text("Supérieur hiérarchique", 120, y + 15);
@@ -554,7 +579,7 @@ async function exporterPDF() {
 }
 
 // ======================
-// EXPORT PDF MODE D'EMPLOI (Propre et complet)
+// EXPORT PDF MODE D'EMPLOI
 // ======================
 function exporterModeEmploiPDF() {
     if (!window.jspdf) {
@@ -720,6 +745,11 @@ function exporterModeEmploiPDF() {
     puce("Heures supplementaires et heures recuperees.");
     puce("Total general et ecart par rapport au volume de base.");
 
-    // Sauvegarde et téléchargement du document
     doc.save('mode_d_emploi.pdf');
 }
+
+// Initialisation globale au chargement de la page
+document.addEventListener("DOMContentLoaded", () => {
+    restaurerSauvegarde();
+    updateQuotiteAndResults();
+});
