@@ -582,11 +582,6 @@ async function exporterPDF() {
 // EXPORT PDF MODE D'EMPLOI
 // ======================
 function exporterModeEmploiPDF() {
-    if (!window.jspdf) {
-        console.error("jsPDF n'est pas chargé sur la page.");
-        return;
-    }
-    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const pageWidth  = doc.internal.pageSize.width;
@@ -596,58 +591,32 @@ function exporterModeEmploiPDF() {
     let y = 20;
 
     function checkPage(needed) {
-        if (y + needed > pageHeight - 15) { 
-            doc.addPage(); 
-            y = 20; 
-        }
+        if (y + needed > pageHeight - 15) { doc.addPage(); y = 20; }
     }
-    
     function titre1(text) {
         checkPage(12);
-        doc.setFontSize(14); 
-        doc.setFont(undefined, 'bold');
-        doc.text(text, mL, y); 
-        y += 8;
+        doc.setFontSize(14); doc.setFont(undefined, 'bold');
+        doc.text(text, mL, y); y += 8;
         doc.setFont(undefined, 'normal');
     }
-    
     function titre2(text) {
         checkPage(9);
-        doc.setFontSize(11); 
-        doc.setFont(undefined, 'bold');
-        doc.text(text, mL, y); 
-        y += 6;
+        doc.setFontSize(11); doc.setFont(undefined, 'bold');
+        doc.text(text, mL, y); y += 6;
         doc.setFont(undefined, 'normal');
     }
-    
     function para(text, indent) {
-        doc.setFontSize(10); 
-        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10); doc.setFont(undefined, 'normal');
         const x = mL + (indent || 0);
         const lines = doc.splitTextToSize(text, maxW - (indent || 0));
-        lines.forEach(line => { 
-            checkPage(6); 
-            doc.text(line, x, y); 
-            y += 5; 
-        });
+        lines.forEach(line => { checkPage(6); doc.text(line, x, y); y += 5; });
         y += 1;
     }
-    
     function puce(text) {
-        doc.setFontSize(10); 
-        doc.setFont(undefined, 'normal');
-        const lines = doc.splitTextToSize(text, maxW - 5); 
-        lines.forEach((line, index) => { 
-            checkPage(6); 
-            if (index === 0) {
-                doc.text('•', mL, y);
-            }
-            doc.text(line, mL + 5, y); 
-            y += 5; 
-        });
-        y += 1; 
+        doc.setFontSize(10); doc.setFont(undefined, 'normal');
+        const lines = doc.splitTextToSize('• ' + text, maxW - 6);
+        lines.forEach(line => { checkPage(6); doc.text(line, mL + 5, y); y += 5; });
     }
-    
     function hr() {
         checkPage(8);
         doc.setDrawColor(200);
@@ -655,18 +624,15 @@ function exporterModeEmploiPDF() {
         y += 7;
         doc.setDrawColor(0);
     }
-    
     function tableau(headers, rows) {
         checkPage(22);
         doc.autoTable({
-            head: [headers], 
-            body: rows,
-            startY: y, 
-            margin: { left: mL, right: mR },
+            head: [headers], body: rows,
+            startY: y, margin: { left: mL, right: mR },
             styles: { fontSize: 9 },
             headStyles: { fillColor: [242, 242, 242], textColor: 50, fontStyle: 'bold' }
         });
-        y = doc.previousAutoTable.finalY + 5; 
+        y = doc.lastAutoTable.finalY + 5;
     }
 
     // ---- TITRE PRINCIPAL ----
@@ -678,7 +644,7 @@ function exporterModeEmploiPDF() {
 
     // ---- PRÉSENTATION ----
     titre1("Présentation générale");
-    para("Cet outil permet de calculer et de suivre le temps de travail annuel d'un agent d'un EPLE sur l'annee scolaire 2026-2027. Il est organise en 4 onglets a renseigner dans l'ordre.");
+    para("Cet outil permet de calculer et de suivre le temps de travail annuel d'un agent d'un EPLE sur l'annee scolaire 2026-2027. Il est organise en 5 onglets a renseigner dans l'ordre.");
     para("Toutes vos saisies sont automatiquement sauvegardees dans votre navigateur. Vous pouvez fermer et rouvrir la page sans perdre vos donnees.");
     hr();
 
@@ -688,7 +654,7 @@ function exporterModeEmploiPDF() {
     puce("Nom et prenom de l'agent (ils apparaitront dans le PDF exporte).");
     puce("Quotite de travail : selectionnez le pourcentage dans le menu deroulant (100 %, 90 %, 80 %...).");
     y += 2;
-    para("Le champ 'Heures a effectuer' se calcule automatiquement. Il indique le volume annuel de reference (hors fractionnement) sur lequel portera le bilan final.");
+    para("Le champ 'Heures a effectuer' se calcule automatiquement.");
     para("Exemple : un agent a 80 % doit effectuer 1 274,40 h dans l'annee.");
     hr();
 
@@ -700,56 +666,96 @@ function exporterModeEmploiPDF() {
     puce("Si un agent ne travaille pas le matin ou l'apres-midi un jour donne, laissez simplement les champs vides.");
     y += 2;
     titre2("2. Pauses de 20 minutes");
-    para("Si l'agent beneficie de pauses de 20 minutes comptabilisees comme temps de travail effectif, indiquez leur nombre par semaine dans le champ prevu. Elles s'ajoutent automatiquement au total hebdomadaire.");
+    para("Si l'agent beneficie de pauses de 20 minutes comptabilisees comme temps de travail effectif, indiquez leur nombre hebdomadaire.");
     tableau(
         ["Nombre de pauses", "Duree totale", "Valeur decimale"],
         [["1 pause", "20 min", "0,33 h"], ["2 pauses", "40 min", "0,66 h"], ["3 pauses", "60 min", "1,00 h"]]
     );
-    titre2("3. Reporter le total");
-    para("Cliquez sur 'Copier dans le champ ci-dessous' pour reporter le total hebdomadaire dans le champ 'Heures par semaine', puis sur 'Appliquer a toutes les semaines hors vacances' pour pre-remplir l'onglet 3.");
+    titre2("3. Reporter le total dans le champ hebdomadaire");
+    para("Cliquez sur 'Copier dans le champ ci-dessous' puis sur 'Appliquer a toutes les semaines hors vacances'.");
     hr();
 
     // ---- ONGLET 3 ----
     titre1("Onglet 3 — Tableau des semaines");
-    para("Cet onglet presente la liste de toutes les semaines de l'annee scolaire. Les semaines de vacances scolaires apparaissent en fond jaune.");
+    para("Les semaines de vacances scolaires apparaissent en fond jaune.");
     tableau(
         ["Colonne", "Usage"],
         [
-            ["Heures", "Volume horaire de la semaine (pre-rempli pour les semaines travaillees)"],
-            ["Heures Sup", "Heures supplementaires effectuees"],
-            ["Heures Recup", "Heures recuperees (deduites du total)"],
-            ["Commentaires", "Champ libre (conges, formations, absences...)"]
+            ["Heures", "Volume horaire hebdomadaire"],
+            ["Heures Sup", "Heures supplementaires"],
+            ["Heures Recup", "Heures recuperees"],
+            ["Commentaires", "Observations diverses"]
         ]
     );
     titre2("Saisie en heures decimales");
-    para("Toutes les valeurs sont exprimees en heures decimales. Regle : divisez les minutes par 60.");
     tableau(
-        ["Minutes", "Decimal", "Minutes", "Decimal"],
-        [
-            ["6 min","0,10","36 min","0,60"],
-            ["12 min","0,20","40 min","0,66"],
-            ["15 min","0,25","45 min","0,75"],
-            ["18 min","0,30","48 min","0,80"],
-            ["20 min","0,33","54 min","0,90"],
-            ["24 min","0,40","60 min","1,00"],
-            ["30 min","0,50","",""]
-        ]
+        ["Minutes", "Valeur decimale"],
+        [["6 min","0,10"], ["12 min","0,20"], ["15 min","0,25"], ["18 min","0,30"], ["20 min","0,33"], ["24 min","0,40"], ["30 min","0,50"], ["36 min","0,60"], ["40 min","0,66"], ["45 min","0,75"], ["48 min","0,80"], ["54 min","0,90"]]
     );
+    para("Regle generale : divisez les minutes par 60. Exemple : 48 ÷ 60 = 0,80.");
     hr();
 
     // ---- ONGLET 4 ----
     titre1("Onglet 4 — Resultats & Export");
-    para("Cet onglet affiche le bilan annuel de l'agent, mis a jour en temps reel :");
-    puce("Heures effectuees hors vacances scolaires.");
-    puce("Heures effectuees pendant les vacances scolaires.");
-    puce("Heures supplementaires et heures recuperees.");
-    puce("Total general et ecart par rapport au volume de base.");
+    puce("Heures effectuees hors vacances scolaires");
+    puce("Heures effectuees pendant les vacances scolaires");
+    puce("Heures supplementaires");
+    puce("Heures recuperees");
+    puce("Total general");
+    puce("Ecart par rapport au volume de reference");
+    y += 2;
+    para("Cliquez sur 'Exporter en PDF' pour generer le document recapitulatif complet.");
+    hr();
 
-    doc.save('mode_d_emploi.pdf');
+    // ---- ONGLET 5 ----
+    titre1("Onglet 5 — Informations reglementaires");
+    para("Cet onglet rappelle les textes de reference et les règles essentielles d'organisation du temps de travail.");
+    hr();
+
+    // ---- CONSEILS ----
+    titre1("Conseils pratiques");
+    puce("Respectez l'ordre des onglets.");
+    puce("Modifiez directement les semaines atypiques dans l'onglet 3.");
+    puce("Renseignez le nom et le prenom avant l'export PDF.");
+
+    // ---- PAGINATION ----
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.text(`Page ${i} / ${pageCount}`, pageWidth - mR, pageHeight - 10, { align: 'right' });
+    }
+
+    doc.save("mode_emploi_outil_EPLE.pdf");
 }
 
-// Initialisation globale au chargement de la page
-document.addEventListener("DOMContentLoaded", () => {
+// Alias pour faire le pont avec le bouton du fichier HTML sans rien casser
+function exporterGuidePDF() {
+    exporterModeEmploiPDF();
+}
+
+
+// ======================
+// INITIALISATION
+// ======================
+document.addEventListener('change',function(e){if(e.target.matches('#heuresTable input[type="text"]')){updateRow(e.target.closest('tr'));calculerTotalHebdo();}});
+
+window.onload = function() {
+    const hasSave = !!localStorage.getItem('eple_calculateur');
+    if (!hasSave) {
+        document.getElementById("quotiteSelect").value = "100";
+        document.getElementById("horaireHorsVacances").value = "35.00";
+    }
+
     restaurerSauvegarde();
     updateQuotiteAndResults();
-});
+    calculerTotalHebdo();
+    genererTableauSemaines();
+    calculerResultats();
+
+    const defaultTab = document.querySelector('.tab.active');
+    if (defaultTab) {
+        const defaultTabId = defaultTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+        changerOnglet({ currentTarget: defaultTab }, defaultTabId);
+    }        
+};
