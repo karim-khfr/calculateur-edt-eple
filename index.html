@@ -463,5 +463,13 @@
 </div>
 
 <script src="js/app.js"></script>
-
+<script>
+function exporterGuidePDF() {
+    if (typeof exporterModeEmploiPDF === 'function') {
+        exporterModeEmploiPDF();
+    } else {
+        console.error("La fonction principale exporterModeEmploiPDF n'a pas pu être trouvée dans app.js.");
+    }
+}
+</script>
 </html>
