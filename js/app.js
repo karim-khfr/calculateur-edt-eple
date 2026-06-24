@@ -16,13 +16,10 @@ function changerOnglet(event, ongletId) {
     }
 }
 
-
-
 // ======================
 // SAUVEGARDE LOCALE
 // ======================
 
-// Sauvegarde étendue : champs simples + horaires onglet 2 + tableauSemainesData
 function sauvegarderTout() {
     const data = {};
     document.querySelectorAll('input, textarea, select').forEach(el => {
@@ -30,7 +27,6 @@ function sauvegarderTout() {
         if (key) data[key] = el.value;
     });
 
-    // Champs sans id : horaires journaliers onglet 2
     const horaires = [];
     document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
         horaires.push({
@@ -41,35 +37,28 @@ function sauvegarderTout() {
         });
     });
     data['__horaires'] = JSON.stringify(horaires);
-
-    // Données de l'onglet 3 (générées dynamiquement)
     data['__tableauSemainesData'] = JSON.stringify(tableauSemainesData);
 
     localStorage.setItem('eple_calculateur', JSON.stringify(data));
 }
 
-// Écouter toute saisie
 document.addEventListener('input', sauvegarderTout);
 document.addEventListener('change', sauvegarderTout);
 
-// Restauration au chargement
 function restaurerSauvegarde() {
     try {
         const data = JSON.parse(localStorage.getItem('eple_calculateur') || '{}');
 
-        // 1. Restaurer tableauSemainesData
         if (data['__tableauSemainesData']) {
             Object.assign(tableauSemainesData, JSON.parse(data['__tableauSemainesData']));
         }
 
-        // 2. Restaurer les champs avec id
         Object.entries(data).forEach(([k, v]) => {
             if (k.startsWith('__')) return;
             const el = document.getElementById(k);
             if (el) el.value = v;
         });
 
-        // 3. Restaurer les horaires journaliers (champs sans id)
         if (data['__horaires']) {
             const horaires = JSON.parse(data['__horaires']);
             document.querySelectorAll('#heuresTable tbody tr').forEach((row, i) => {
@@ -85,11 +74,9 @@ function restaurerSauvegarde() {
     } catch(e) { console.warn('Restauration sauvegarde :', e); }
 }
 
-
 // ======================
 // FONCTIONS UTILITAIRES
 // ======================
-// Convertit des heures décimales en format "XhYY" (ex: 7.5 → "7h30")
 function formatHeure(heures) {
     if (heures === undefined || heures === null || isNaN(heures)) {
         return "0h00";
@@ -100,22 +87,14 @@ function formatHeure(heures) {
     return `${heuresEntieres}h${minutesFormatees}`;
 }
 
-// Convertit des heures décimales en format "XhYY" pour l'affichage dans les résultats
 function formatHeurePourAffichage(heures) {
-    if (heures === undefined || heures === null || isNaN(heures)) {
-        return "0h00";
-    }
-    const heuresEntieres = Math.floor(heures);
-    const minutes = Math.round((heures - heuresEntieres) * 60);
-    const minutesFormatees = minutes < 10 ? `0${minutes}` : minutes;
-    return `${heuresEntieres}h${minutesFormatees}`;
+    return formatHeure(heures);
 }
 
 // ======================
 // DONNÉES GLOBALES
 // ======================
 
-// Périodes de vacances scolaires (Plus tard : mise à jour auto via API)
 const vacances = [
     { nom: "Toussaint", debut: new Date(2026, 9, 19), fin: new Date(2026, 10, 1), semaines: [] },
     { nom: "Noël", debut: new Date(2026, 11, 21), fin: new Date(2027, 0, 3), semaines: [] },
@@ -126,7 +105,6 @@ const vacances = [
 
 const tempsPlein = { effectif: 1593, fractionnement: 14, total: 1607 };
 
-// Données des semaines (Plus tard : mise à jour auto via API)
 const semaines = [
     { num: 36, debut: "31/08/2026", fin: "05/09/2026" },
     { num: 37, debut: "07/09/2026", fin: "12/09/2026" },
@@ -183,11 +161,10 @@ const semaines = [
     { num: 35, debut: "30/08/2027", fin: "04/09/2027" }
 ];
 
-// Stockage des données du tableau des semaines
 let tableauSemainesData = {};
 
 // ======================
-// FONCTIONS UTILITAIRES
+// FONCTIONS UTILITAIRES DATES
 // ======================
 function formaterDate(dateStr) {
     const [jour, mois, annee] = dateStr.split('/');
@@ -210,7 +187,6 @@ function getNomVacances(debutStr, finStr) {
     return result.nom;
 }
 
-
 // ======================
 // ONGLET 1 : QUOTITÉ
 // ======================
@@ -226,35 +202,26 @@ function updateQuotiteAndResults() {
 }
 
 // ======================
-// ONGLET 2 : HORAIRES PAR PÉRIODE
+// ONGLET 2 : HORAIRES
 // ======================
 function timeToMinutes(timeStr) {
     if (!timeStr || !timeStr.includes(':')) return 0;
-
     const [h, m] = timeStr.split(':').map(Number);
-
     if (isNaN(h) || isNaN(m)) return 0;
-
     return h * 60 + m;
 }
 
 function minutesToTime(minutes) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-
     return `${h}h ${String(m).padStart(2, '0')}`;
 }
 
 function calculateDuration(debut, fin) {
-    const d = timeToMinutes(debut),
-          f = timeToMinutes(fin);
-
+    const d = timeToMinutes(debut), f = timeToMinutes(fin);
     if (!debut || !fin) return 0;
-
     let dur = f - d;
-
     if (dur < 0) dur += 1440;
-
     return dur;
 }
 
@@ -274,13 +241,11 @@ function updateRow(row) {
 
 function calculerTotalHebdo() {
     let total = 0;
-
     document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
         const dm = row.querySelector('.debut-matin').value;
         const fm = row.querySelector('.fin-matin').value;
         const da = row.querySelector('.debut-apm').value;
         const fa = row.querySelector('.fin-apm').value;
-
         total += calculateDuration(dm, fm) + calculateDuration(da, fa);
     });
 
@@ -288,12 +253,12 @@ function calculerTotalHebdo() {
     total += nbPauses * 20;
 
     const heures = total / 60;
-
     window.currentHeuresHebdo = heures;
 
     document.getElementById('totalHebdo').textContent = minutesToTime(total);
     document.getElementById('horaireHorsVacances').value = heures.toFixed(2);
 }
+
 function copierTotalHebdo(){
     const total = window.currentHeuresHebdo || 0;
     document.getElementById("horaireHorsVacances").value = total.toFixed(2);
@@ -305,7 +270,6 @@ function appliquerHorairesHorsVacances() {
     const inputs = document.querySelectorAll(".heures-input[data-en-vacances='false']");
     inputs.forEach(input => {
         input.value = horaire.toFixed(2);
-        // Sauvegarder dans tableauSemainesData
         const semaineNum = input.getAttribute("data-semaine");
         if (!tableauSemainesData[semaineNum]) {
             tableauSemainesData[semaineNum] = {};
@@ -345,7 +309,6 @@ function genererTableauSemaines() {
             row.classList.add("vacances");
         }
 
-        // Récupérer les données sauvegardées
         const semaineData = tableauSemainesData[semaine.num] || {};
         const heures = semaineData.heures !== undefined ? semaineData.heures.toFixed(2) : (result.enVacances ? "0.00" : document.getElementById("horaireHorsVacances").value);
         const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup.toFixed(2) : "0.00";
@@ -382,12 +345,10 @@ function genererTableauSemaines() {
     tableau.appendChild(table);
 }
 
-// Fonction pour sauvegarder les données de chaque semaine
 function sauvegarderDonneesSemaine(semaineNum, champ, valeur) {
     if (!tableauSemainesData[semaineNum]) {
         tableauSemainesData[semaineNum] = {};
     }
-    // Convertir en nombre si c'est un champ numérique
     if (champ !== 'comment') {
         tableauSemainesData[semaineNum][champ] = parseFloat(valeur) || 0;
     } else {
@@ -407,7 +368,6 @@ function calculerResultats() {
     let totalHeuresSup = 0;
     let totalHeuresRecup = 0;
 
-    // Parcourir toutes les semaines
     semaines.forEach(semaine => {
         const semaineData = tableauSemainesData[semaine.num] || {};
         const debut = formaterDate(semaine.debut);
@@ -454,7 +414,7 @@ function calculerResultats() {
 }
 
 // ======================
-// EXPORT PDF
+// EXPORT PDF PRINCIPAL
 // ======================
 async function exporterPDF() {
     const { jsPDF } = window.jspdf;
@@ -463,12 +423,10 @@ async function exporterPDF() {
     const pageHeight = doc.internal.pageSize.height;
     const pageWidth = doc.internal.pageSize.width;
 
-    // Titre
     doc.setFontSize(18);
     doc.text("Emploi du temps annuel EPLE", 105, 20, { align: "center" });
 
     doc.setFontSize(12);
-
     const quotiteValue = window.currentQuotite || 100;
     const heuresMaxValue = document.getElementById("heuresMaxInput").value;
 
@@ -476,14 +434,10 @@ async function exporterPDF() {
     doc.text(`Heures annuelles: ${heuresMaxValue}`, 20, 50);
     doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 60);
     
-    // Récupérer le nom et prénom de l'agent
     const nomAgent = document.getElementById("nomAgent").value || "_____________";
     const prenomAgent = document.getElementById("prenomAgent").value || "_____________";
-
-    // Afficher le nom et prénom de l'agent
     doc.text(`Agent: ${prenomAgent} ${nomAgent}`, 20, 70);
 
-    // 👇 NOUVEAU : Récapitulatif des horaires hebdomadaires
     doc.setFontSize(11);
     doc.text("Récapitulatif des horaires hebdomadaires :", 20, 80);
 
@@ -508,9 +462,7 @@ async function exporterPDF() {
         styles: { fontSize: 8 }
     });
 
-    const yAfterHoraires = doc.lastAutoTable.finalY + 5;
-
-    // TABLEAU des semaines (décalé)
+    const yAfterHoraires = doc.previousAutoTable.finalY + 5;
     const semainesData = [];
 
     semaines.forEach(semaine => {
@@ -538,10 +490,8 @@ async function exporterPDF() {
         styles: { fontSize: 9 }
     });
 
-    // RÉSULTATS (uniquement total et différence)
-    let y = doc.lastAutoTable.finalY + 10;
+    let y = doc.previousAutoTable.finalY + 10;
 
-    // Calcul des totaux
     let totalHorsVacances = 0;
     let totalVacances = 0;
     let totalHeuresSup = 0;
@@ -553,7 +503,7 @@ async function exporterPDF() {
         const fin = formaterDate(semaine.fin);
         const result = estEnVacances(debut, fin);
 
-        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : parseFloat    (document.getElementById("horaireHorsVacances").value) || 0);
+        const heures = semaineData.heures !== undefined ? semaineData.heures : (result.enVacances ? 0 : parseFloat(document.getElementById("horaireHorsVacances").value) || 0);
         const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup : 0;
         const heuresRecup = semaineData.heuresRecup !== undefined ? semaineData.heuresRecup : 0;
 
@@ -576,18 +526,14 @@ async function exporterPDF() {
     doc.text(`Total heures travaillées : ${totalHeures.toFixed(2)} h (${formatHeure(totalHeures)})`, 20, y + 5);
     doc.text(`Différence : ${difference >= 0 ? "+" : ""}${difference.toFixed(2)} h (${formatHeure(Math.abs(difference))}) ${difference >= 0 ? "(Au-dessus" : "(En dessous"} du nombre d'heures à effectuer)`, 20, y + 10);
 
-    y = y + 8; // Espace après les résultats
-
-    // 👉 gestion vraie du débordement
+    y = y + 8;
     const signatureHeight = 30;
     if (y + signatureHeight > pageHeight) {
         doc.addPage();
         y = 30;
     }
 
-    // SIGNATURES
     doc.setFontSize(10);
-
     doc.text("Agent", 20, y + 15);
     doc.text(`Nom : ${document.getElementById("nomAgent").value || "________________"}`, 20, y + 25);
     doc.text(`Prénom : ${document.getElementById("prenomAgent").value || "________________"}`, 20, y + 30);
@@ -597,9 +543,7 @@ async function exporterPDF() {
     doc.text("Nom : ____________________", 120, y + 25);
     doc.text("Signature :", 120, y + 40);
 
-    // PAGINATION
     const pageCount = doc.internal.getNumberOfPages();
-
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(9);
@@ -609,12 +553,10 @@ async function exporterPDF() {
     doc.save("emploi_du_temps_annuel_eple.pdf");
 }
 
-
 // ======================
-// EXPORT PDF MODE D'EMPLOI
+// EXPORT PDF MODE D'EMPLOI (Propre et complet)
 // ======================
 function exporterModeEmploiPDF() {
-    // Vérification de la présence de jsPDF et autoTable
     if (!window.jspdf) {
         console.error("jsPDF n'est pas chargé sur la page.");
         return;
@@ -669,18 +611,16 @@ function exporterModeEmploiPDF() {
     function puce(text) {
         doc.setFontSize(10); 
         doc.setFont(undefined, 'normal');
-        // On calcule la taille disponible pour le texte après la puce (retrait de 5mm)
         const lines = doc.splitTextToSize(text, maxW - 5); 
-        
         lines.forEach((line, index) => { 
             checkPage(6); 
             if (index === 0) {
-                doc.text('•', mL, y); // La puce uniquement sur la première ligne
+                doc.text('•', mL, y);
             }
-            doc.text(line, mL + 5, y); // Le texte décalé
+            doc.text(line, mL + 5, y); 
             y += 5; 
         });
-        y += 1; // Petit espace après la puce
+        y += 1; 
     }
     
     function hr() {
@@ -693,7 +633,6 @@ function exporterModeEmploiPDF() {
     
     function tableau(headers, rows) {
         checkPage(22);
-        // jspdf-autotable doit être inclus dans votre HTML
         doc.autoTable({
             head: [headers], 
             body: rows,
@@ -702,32 +641,8 @@ function exporterModeEmploiPDF() {
             styles: { fontSize: 9 },
             headStyles: { fillColor: [242, 242, 242], textColor: 50, fontStyle: 'bold' }
         });
-        // CORRECTION ICI : previousAutoTable au lieu de lastAutoTable
         y = doc.previousAutoTable.finalY + 5; 
     }
-
-    // --- EXEMPLE D'UTILISATION ET DE GÉNÉRATION ---
-    titre1("Mode d'emploi de l'outil");
-    para("Voici un paragraphe d'introduction pour tester si le système de mise en page fonctionne correctement.");
-    
-    titre2("1. Les fonctionnalités");
-    puce("Première fonctionnalité très importante qui nécessite une explication.");
-    puce("Deuxième fonctionnalité tellement longue qu'elle risque de passer à la ligne suivante pour tester si notre système de puces fonctionne à merveille.");
-    
-    hr();
-    
-    titre2("2. Tableau récapitulatif");
-    tableau(
-        ["Option", "Description"],
-        [
-            ["Exporter", "Permet de générer le PDF"],
-            ["Reset", "Réinitialise les champs de l'outil"]
-        ]
-    );
-
-    // Sauvegarde du document
-    doc.save('mode_d_emploi.pdf');
-}
 
     // ---- TITRE PRINCIPAL ----
     doc.setFontSize(18); doc.setFont(undefined, 'bold');
@@ -738,7 +653,7 @@ function exporterModeEmploiPDF() {
 
     // ---- PRÉSENTATION ----
     titre1("Présentation générale");
-    para("Cet outil permet de calculer et de suivre le temps de travail annuel d'un agent d'un EPLE sur l'annee scolaire 2026-2027. Il est organise en 5 onglets a renseigner dans l'ordre.");
+    para("Cet outil permet de calculer et de suivre le temps de travail annuel d'un agent d'un EPLE sur l'annee scolaire 2026-2027. Il est organise en 4 onglets a renseigner dans l'ordre.");
     para("Toutes vos saisies sont automatiquement sauvegardees dans votre navigateur. Vous pouvez fermer et rouvrir la page sans perdre vos donnees.");
     hr();
 
@@ -800,63 +715,11 @@ function exporterModeEmploiPDF() {
     // ---- ONGLET 4 ----
     titre1("Onglet 4 — Resultats & Export");
     para("Cet onglet affiche le bilan annuel de l'agent, mis a jour en temps reel :");
-    puce("Heures effectuees hors vacances scolaires");
-    puce("Heures effectuees pendant les vacances scolaires");
-    puce("Heures supplementaires et heures recuperees");
-    puce("Total general et ecart par rapport au volume de reference (en positif ou negatif)");
-    y += 2;
-    para("Cliquez sur 'Exporter en PDF' pour generer un document recapitulatif complet avec le tableau des semaines, le bilan et le bloc signatures.");
-    hr();
+    puce("Heures effectuees hors vacances scolaires.");
+    puce("Heures effectuees pendant les vacances scolaires.");
+    puce("Heures supplementaires et heures recuperees.");
+    puce("Total general et ecart par rapport au volume de base.");
 
-    // ---- ONGLET 5 ----
-    titre1("Onglet 5 — Informations reglementaires");
-    para("Cet onglet est purement informatif. Il rappelle les textes de reference et les regles essentielles d'organisation du temps de travail : durees maximales, pauses, valorisation des horaires decales, decompte des jours feries, etc.");
-    hr();
-
-    // ---- CONSEILS ----
-    titre1("Conseils pratiques");
-    puce("Respectez l'ordre des onglets : quotite (1) > horaires (2) > tableau (3).");
-    puce("Pour une semaine atypique, modifiez directement la valeur dans la colonne 'Heures' de cette semaine dans l'onglet 3.");
-    puce("Le PDF reprend automatiquement le nom et le prenom saisis dans l'onglet 1 — pensez a les renseigner avant d'exporter.");
-
-    // ---- PAGINATION ----
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(9);
-        doc.text(`Page ${i} / ${pageCount}`, pageWidth - mR, pageHeight - 10, { align: 'right' });
-    }
-
-    doc.save("mode_emploi_outil_EPLE.pdf");
+    // Sauvegarde et téléchargement du document
+    doc.save('mode_d_emploi.pdf');
 }
-
-
-// ======================
-// INITIALISATION
-// ======================
-document.addEventListener('change',function(e){if(e.target.matches('#heuresTable input[type="text"]')){updateRow(e.target.closest('tr'));calculerTotalHebdo();}});
-
-window.onload = function() {
-    // Appliquer les défauts seulement s'il n'y a pas de sauvegarde
-    const hasSave = !!localStorage.getItem('eple_calculateur');
-    if (!hasSave) {
-        document.getElementById("quotiteSelect").value = "100";
-        document.getElementById("horaireHorsVacances").value = "35.00";
-    }
-
-    // Restaurer la sauvegarde (remplace les défauts si elle existe)
-    restaurerSauvegarde();
-
-    // Recalculer à partir des valeurs en place
-    updateQuotiteAndResults();
-    calculerTotalHebdo();
-    genererTableauSemaines();
-    calculerResultats();
-
-    // Active l'onglet "Mode d'emploi" par défaut
-    const defaultTab = document.querySelector('.tab.active');
-    if (defaultTab) {
-        const defaultTabId = defaultTab.getAttribute('onclick').match(/'([^']+)'/)[1];
-        changerOnglet({ currentTarget: defaultTab }, defaultTabId);
-    }        
-};
