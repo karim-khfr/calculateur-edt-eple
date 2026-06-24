@@ -614,6 +614,12 @@ async function exporterPDF() {
 // EXPORT PDF MODE D'EMPLOI
 // ======================
 function exporterModeEmploiPDF() {
+    // Vérification de la présence de jsPDF et autoTable
+    if (!window.jspdf) {
+        console.error("jsPDF n'est pas chargé sur la page.");
+        return;
+    }
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const pageWidth  = doc.internal.pageSize.width;
@@ -623,32 +629,60 @@ function exporterModeEmploiPDF() {
     let y = 20;
 
     function checkPage(needed) {
-        if (y + needed > pageHeight - 15) { doc.addPage(); y = 20; }
+        if (y + needed > pageHeight - 15) { 
+            doc.addPage(); 
+            y = 20; 
+        }
     }
+    
     function titre1(text) {
         checkPage(12);
-        doc.setFontSize(14); doc.setFont(undefined, 'bold');
-        doc.text(text, mL, y); y += 8;
+        doc.setFontSize(14); 
+        doc.setFont(undefined, 'bold');
+        doc.text(text, mL, y); 
+        y += 8;
         doc.setFont(undefined, 'normal');
     }
+    
     function titre2(text) {
         checkPage(9);
-        doc.setFontSize(11); doc.setFont(undefined, 'bold');
-        doc.text(text, mL, y); y += 6;
+        doc.setFontSize(11); 
+        doc.setFont(undefined, 'bold');
+        doc.text(text, mL, y); 
+        y += 6;
         doc.setFont(undefined, 'normal');
     }
+    
     function para(text, indent) {
-        doc.setFontSize(10); doc.setFont(undefined, 'normal');
+        doc.setFontSize(10); 
+        doc.setFont(undefined, 'normal');
         const x = mL + (indent || 0);
         const lines = doc.splitTextToSize(text, maxW - (indent || 0));
-        lines.forEach(line => { checkPage(6); doc.text(line, x, y); y += 5; });
+        lines.forEach(line => { 
+            checkPage(6); 
+            doc.text(line, x, y); 
+            y += 5; 
+        });
         y += 1;
     }
+    
     function puce(text) {
-        doc.setFontSize(10); doc.setFont(undefined, 'normal');
-        const lines = doc.splitTextToSize('• ' + text, maxW - 6);
-        lines.forEach(line => { checkPage(6); doc.text(line, mL + 5, y); y += 5; });
+        doc.setFontSize(10); 
+        doc.setFont(undefined, 'normal');
+        // On calcule la taille disponible pour le texte après la puce (retrait de 5mm)
+        const lines = doc.splitTextToSize(text, maxW - 5); 
+        
+        lines.forEach((line, index) => { 
+            checkPage(6); 
+            if (index === 0) {
+                doc.text('•', mL, y); // La puce uniquement sur la première ligne
+            }
+            doc.text(line, mL + 5, y); // Le texte décalé
+            y += 5; 
+        });
+        y += 1; // Petit espace après la puce
     }
+    
     function hr() {
         checkPage(8);
         doc.setDrawColor(200);
@@ -656,16 +690,44 @@ function exporterModeEmploiPDF() {
         y += 7;
         doc.setDrawColor(0);
     }
+    
     function tableau(headers, rows) {
         checkPage(22);
+        // jspdf-autotable doit être inclus dans votre HTML
         doc.autoTable({
-            head: [headers], body: rows,
-            startY: y, margin: { left: mL, right: mR },
+            head: [headers], 
+            body: rows,
+            startY: y, 
+            margin: { left: mL, right: mR },
             styles: { fontSize: 9 },
             headStyles: { fillColor: [242, 242, 242], textColor: 50, fontStyle: 'bold' }
         });
-        y = doc.lastAutoTable.finalY + 5;
+        // CORRECTION ICI : previousAutoTable au lieu de lastAutoTable
+        y = doc.previousAutoTable.finalY + 5; 
     }
+
+    // --- EXEMPLE D'UTILISATION ET DE GÉNÉRATION ---
+    titre1("Mode d'emploi de l'outil");
+    para("Voici un paragraphe d'introduction pour tester si le système de mise en page fonctionne correctement.");
+    
+    titre2("1. Les fonctionnalités");
+    puce("Première fonctionnalité très importante qui nécessite une explication.");
+    puce("Deuxième fonctionnalité tellement longue qu'elle risque de passer à la ligne suivante pour tester si notre système de puces fonctionne à merveille.");
+    
+    hr();
+    
+    titre2("2. Tableau récapitulatif");
+    tableau(
+        ["Option", "Description"],
+        [
+            ["Exporter", "Permet de générer le PDF"],
+            ["Reset", "Réinitialise les champs de l'outil"]
+        ]
+    );
+
+    // Sauvegarde du document
+    doc.save('mode_d_emploi.pdf');
+}
 
     // ---- TITRE PRINCIPAL ----
     doc.setFontSize(18); doc.setFont(undefined, 'bold');
