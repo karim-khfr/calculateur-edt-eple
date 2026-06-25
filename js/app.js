@@ -297,6 +297,29 @@ function appliquerHorairesHorsVacances() {
 // ======================
 // ONGLET 3 : TABLEAU DES SEMAINES
 // ======================
+function heuresVersDecimal(valeur) {
+    if (!valeur) return 0;
+
+    valeur = valeur.toString().trim();
+
+    if (valeur.includes(':')) {
+        const [h, m] = valeur.split(':').map(Number);
+
+        if (isNaN(h) || isNaN(m)) return 0;
+
+        return h + (m / 60);
+    }
+
+    return parseFloat(valeur) || 0;
+}
+
+function decimalVersHeures(valeur) {
+    const heures = Math.floor(valeur);
+    const minutes = Math.round((valeur - heures) * 60);
+
+    return `${heures}:${String(minutes).padStart(2, '0')}`;
+}
+
 function genererTableauSemaines() {
     const tableau = document.getElementById("tableauSemaines");
     if (!tableau) return;
@@ -329,9 +352,15 @@ function genererTableauSemaines() {
         }
 
         const semaineData = tableauSemainesData[semaine.num] || {};
-        const heures = semaineData.heures !== undefined ? semaineData.heures.toFixed(2) : (result.enVacances ? "0.00" : horaireDefault);
-        const heuresSup = semaineData.heuresSup !== undefined ? semaineData.heuresSup.toFixed(2) : "0.00";
-        const heuresRecup = semaineData.heuresRecup !== undefined ? semaineData.heuresRecup.toFixed(2) : "0.00";
+        const heures = semaineData.heures !== undefined
+            ? decimalVersHeures(semaineData.heures)
+            : decimalVersHeures(parseFloat(result.enVacances ? 0 : horaireDefault));
+        const heuresSup = semaineData.heuresSup !== undefined
+            ? decimalVersHeures(semaineData.heuresSup)
+            : "0:00";
+        const heuresRecup = semaineData.heuresRecup !== undefined
+            ? decimalVersHeures(semaineData.heuresRecup)
+            : "0:00";
         const comment = semaineData.comment !== undefined ? semaineData.comment : "";
 
         row.innerHTML = `
@@ -340,16 +369,16 @@ function genererTableauSemaines() {
             <td>${semaine.fin}</td>
             <td>${result.nom}</td>
             <td>
-                <input type="number" class="heures-input" data-semaine="${semaine.num}"
+                <input type="text" class="heures-input" data-semaine="${semaine.num}"
                        data-en-vacances="${result.enVacances}" step="any" min="0"
                        value="${heures}" onchange="sauvegarderDonneesSemaine(${semaine.num}, 'heures', this.value); calculerResultats()">
             </td>
             <td>
-                <input type="number" class="heures-sup-input" data-semaine="${semaine.num}" step="any" min="0"
+                <input type="text" class="heures-sup-input" data-semaine="${semaine.num}" step="any" min="0"
                        value="${heuresSup}" onchange="sauvegarderDonneesSemaine(${semaine.num}, 'heuresSup', this.value); calculerResultats()">
             </td>
             <td>
-                <input type="number" class="heures-recup-input" data-semaine="${semaine.num}" step="any" min="0"
+                <input type="text" class="heures-recup-input" data-semaine="${semaine.num}" step="any" min="0"
                        value="${heuresRecup}" onchange="sauvegarderDonneesSemaine(${semaine.num}, 'heuresRecup', this.value); calculerResultats()">
             </td>
             <td>
@@ -365,11 +394,13 @@ function genererTableauSemaines() {
 }
 
 function sauvegarderDonneesSemaine(semaineNum, champ, valeur) {
+
     if (!tableauSemainesData[semaineNum]) {
         tableauSemainesData[semaineNum] = {};
     }
+
     if (champ !== 'comment') {
-        tableauSemainesData[semaineNum][champ] = parseFloat(valeur) || 0;
+        tableauSemainesData[semaineNum][champ] = heuresVersDecimal(valeur);
     } else {
         tableauSemainesData[semaineNum][champ] = valeur;
     }
