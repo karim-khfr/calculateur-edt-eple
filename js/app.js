@@ -667,10 +667,53 @@ function exporterModeEmploiPDF() {
     }
 
     // ---- TITRE PRINCIPAL ----
-    doc.setFontSize(18); doc.setFont(undefined, 'bold');
-    doc.text("Mode d'emploi", pageWidth / 2, y, { align: 'center' }); y += 8;
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text("Mode d'emploi", pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    
     doc.setFontSize(12); doc.setFont(undefined, 'normal');
-    doc.text("Outil de calcul du temps de travail EPLE", pageWidth / 2, y, { align: 'center' }); y += 10;
+    doc.text("Outil de calcul du temps de travail EPLE", pageWidth / 2, y, { align: 'center' });
+    y += 10;
+    
+    // Lien vers la version en ligne
+    doc.setFontSize(10);
+
+    doc.text(
+        "Version en ligne de l'application :",
+        mL,
+        y
+    );
+    y += 6;
+
+    const url = "https://karim-khfr.github.io/calculateur-edt-eple/";
+
+    // Couleur bleue
+    doc.setTextColor(0, 0, 255);
+
+    doc.textWithLink(
+        url,
+        mL,
+        y,
+        {
+            url: url
+        }
+    );
+
+    // Soulignement
+    const largeurLien = doc.getTextWidth(url);
+    doc.line(
+        mL,
+        y + 1,
+        mL + largeurLien,
+        y + 1
+    );
+
+    // Retour à la couleur noire
+    doc.setTextColor(0, 0, 0);
+   
+     y += 8;
+
     hr();
 
     // ---- PRÉSENTATION ----
