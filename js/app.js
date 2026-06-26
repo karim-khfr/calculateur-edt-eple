@@ -10,7 +10,7 @@ function changerOnglet(event, ongletId) {
     if (targetContent) {
         targetContent.classList.add('active');
     }
-    
+
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
@@ -71,14 +71,14 @@ function restaurerSauvegarde() {
             document.querySelectorAll('#heuresTable tbody tr').forEach((row, i) => {
                 if (!horaires[i]) return;
                 row.querySelector('.debut-matin').value = horaires[i].dm || '';
-                row.querySelector('.fin-matin').value   = horaires[i].fm || '';
-                row.querySelector('.debut-apm').value   = horaires[i].da || '';
-                row.querySelector('.fin-apm').value     = horaires[i].fa || '';
+                row.querySelector('.fin-matin').value = horaires[i].fm || '';
+                row.querySelector('.debut-apm').value = horaires[i].da || '';
+                row.querySelector('.fin-apm').value = horaires[i].fa || '';
                 updateRow(row);
             });
         }
 
-    } catch(e) { console.warn('Restauration sauvegarde :', e); }
+    } catch (e) { console.warn('Restauration sauvegarde :', e); }
 }
 
 // ======================
@@ -200,10 +200,10 @@ function getNomVacances(debutStr, finStr) {
 function updateQuotiteAndResults() {
     const elQuotite = document.getElementById("quotiteSelect");
     if (!elQuotite) return;
-    
+
     const quotite = parseInt(elQuotite.value);
     const heuresMax = (1593 * quotite) / 100;
-    
+
     const elHeuresMax = document.getElementById("heuresMaxInput");
     if (elHeuresMax) {
         elHeuresMax.value = heuresMax.toFixed(2) + " (" + formatHeure(heuresMax) + ")";
@@ -274,7 +274,7 @@ function calculerTotalHebdo() {
     document.getElementById('horaireHorsVacances').value = heures.toFixed(2);
 }
 
-function copierTotalHebdo(){
+function copierTotalHebdo() {
     const total = window.currentHeuresHebdo || 0;
     document.getElementById("horaireHorsVacances").value = total.toFixed(2);
     appliquerHorairesHorsVacances();
@@ -488,7 +488,7 @@ async function exporterPDF() {
     doc.text(`Quotité: ${quotiteValue}%`, 20, 40);
     doc.text(`Heures annuelles: ${heuresMaxValue}`, 20, 50);
     doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 60);
-    
+
     const nomAgent = (document.getElementById("nomAgent") && document.getElementById("nomAgent").value) || "_____________";
     const prenomAgent = (document.getElementById("prenomAgent") && document.getElementById("prenomAgent").value) || "_____________";
     doc.text(`Agent: ${prenomAgent} ${nomAgent}`, 20, 70);
@@ -615,7 +615,7 @@ async function exporterPDF() {
 function exporterModeEmploiPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const pageWidth  = doc.internal.pageSize.width;
+    const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     const mL = 20, mR = 20;
     const maxW = pageWidth - mL - mR;
@@ -671,11 +671,11 @@ function exporterModeEmploiPDF() {
     doc.setFont(undefined, 'bold');
     doc.text("Mode d'emploi", pageWidth / 2, y, { align: 'center' });
     y += 8;
-    
+
     doc.setFontSize(12); doc.setFont(undefined, 'normal');
     doc.text("Outil de calcul du temps de travail EPLE", pageWidth / 2, y, { align: 'center' });
     y += 10;
-    
+
     // Lien vers la version en ligne
     doc.setFontSize(10);
 
@@ -711,8 +711,8 @@ function exporterModeEmploiPDF() {
 
     // Retour à la couleur noire
     doc.setTextColor(0, 0, 0);
-   
-     y += 8;
+
+    y += 8;
 
     hr();
 
@@ -764,7 +764,7 @@ function exporterModeEmploiPDF() {
     titre2("Saisie en heures decimales");
     tableau(
         ["Minutes", "Valeur decimale"],
-        [["6 min","0,10"], ["12 min","0,20"], ["15 min","0,25"], ["18 min","0,30"], ["20 min","0,33"], ["24 min","0,40"], ["30 min","0,50"], ["36 min","0,60"], ["40 min","0,66"], ["45 min","0,75"], ["48 min","0,80"], ["54 min","0,90"]]
+        [["6 min", "0,10"], ["12 min", "0,20"], ["15 min", "0,25"], ["18 min", "0,30"], ["20 min", "0,33"], ["24 min", "0,40"], ["30 min", "0,50"], ["36 min", "0,60"], ["40 min", "0,66"], ["45 min", "0,75"], ["48 min", "0,80"], ["54 min", "0,90"]]
     );
     para("Regle generale : divisez les minutes par 60. Exemple : 48 ÷ 60 = 0,80.");
     hr();
@@ -841,9 +841,9 @@ function resetHorairesHebdo() {
     // Vider les horaires journaliers
     document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
         row.querySelector('.debut-matin').value = '';
-        row.querySelector('.fin-matin').value   = '';
-        row.querySelector('.debut-apm').value   = '';
-        row.querySelector('.fin-apm').value     = '';
+        row.querySelector('.fin-matin').value = '';
+        row.querySelector('.debut-apm').value = '';
+        row.querySelector('.fin-apm').value = '';
         updateRow(row);
     });
 
@@ -859,7 +859,7 @@ function resetHorairesHebdo() {
     // Réinitialiser uniquement les semaines hors vacances dans tableauSemainesData
     semaines.forEach(semaine => {
         const debut = formaterDate(semaine.debut);
-        const fin   = formaterDate(semaine.fin);
+        const fin = formaterDate(semaine.fin);
         const result = estEnVacances(debut, fin);
         if (!result.enVacances) {
             if (tableauSemainesData[semaine.num]) {
@@ -922,11 +922,65 @@ function resetApplication() {
 }
 
 // ======================
+// FONCTION DE DUPLICATION DES HORAIRES
+// ======================
+function dupliquerJour(bouton) {
+    const rowSource = bouton.closest('tr');
+    const jourSource = rowSource.cells[0].textContent.trim();
+
+    // Message d'invite explicite insistant sur la séparation par des virgules
+    const reponse = prompt(
+        `Duplication des horaires du ${jourSource} :\n\n` +
+        `Veuillez saisir les jours cibles en les SÉPARANT OBLIGATOIREMENT PAR UNE VIRGULE.\n\n` +
+        `Exemple exact à recopier : Mardi, Jeudi, Vendredi\n\n` +
+        `Vers quels jours copier ces horaires ?`
+    );
+
+    if (!reponse) return; // Si clic sur Annuler ou champ vide
+
+    // Récupérer proprement les horaires du jour source
+    const dm = rowSource.querySelector('.debut-matin').value;
+    const fm = rowSource.querySelector('.fin-matin').value;
+    const da = rowSource.querySelector('.debut-apm').value;
+    const fa = rowSource.querySelector('.fin-apm').value;
+
+    // Convertir la réponse en liste de jours nettoyés (minuscules et sans espaces superflus)
+    const joursCibles = reponse.split(',').map(j => j.trim().toLowerCase());
+
+    let modificationsAppliquees = false;
+
+    // Parcourir toutes les lignes du tableau pour injecter les heures
+    document.querySelectorAll('#heuresTable tbody tr').forEach(rowCible => {
+        const jourCible = rowCible.cells[0].textContent.trim().toLowerCase();
+
+        // Si le jour correspond à la demande et n'est pas le jour d'origine
+        if (joursCibles.includes(jourCible) && jourCible !== jourSource.toLowerCase()) {
+            rowCible.querySelector('.debut-matin').value = dm;
+            rowCible.querySelector('.fin-matin').value = fm;
+            rowCible.querySelector('.debut-apm').value = da;
+            rowCible.querySelector('.fin-apm').value = fa;
+
+            // Forcer la mise à jour des totaux de cette ligne
+            updateRow(rowCible);
+            modificationsAppliquees = true;
+        }
+    });
+
+    // Si au moins un jour a été modifié, on recalcule le total de la semaine et on sauvegarde
+    if (modificationsAppliquees) {
+        calculerTotalHebdo();
+        if (typeof sauvegarderTout === 'function') {
+            sauvegarderTout();
+        }
+    }
+}
+
+// ======================
 // INITIALISATION
 // ======================
-document.addEventListener('change',function(e){if(e.target.matches('#heuresTable input[type="text"]')){updateRow(e.target.closest('tr'));calculerTotalHebdo();}});
+document.addEventListener('change', function (e) { if (e.target.matches('#heuresTable input[type="text"]')) { updateRow(e.target.closest('tr')); calculerTotalHebdo(); } });
 
-window.onload = function() {
+window.onload = function () {
     const hasSave = !!localStorage.getItem('eple_calculateur');
     if (!hasSave) {
         document.getElementById("quotiteSelect").value = "100";
@@ -943,5 +997,5 @@ window.onload = function() {
     if (defaultTab) {
         const defaultTabId = defaultTab.getAttribute('onclick').match(/'([^']+)'/)[1];
         changerOnglet({ currentTarget: defaultTab }, defaultTabId);
-    }        
+    }
 };
