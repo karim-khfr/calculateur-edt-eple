@@ -96,12 +96,4 @@ Aucune installation ni serveur web ne sont nécessaires.
 
 ## Licence
 
-Copyright © 2026 Karim Khenifer
-
-Le logiciel peut être utilisé, étudié, copié, modifié et redistribué gratuitement
-à des fins personnelles, éducatives, administratives ou institutionnelles.
-
-Toute utilisation commerciale, vente, intégration dans une offre commerciale
-ou prestation rémunérée nécessite l'autorisation écrite préalable de l'auteur.
-
-Les contributions sont les bienvenues et doivent conserver cette licence.
+Ce projet est distribué sous licence MIT.

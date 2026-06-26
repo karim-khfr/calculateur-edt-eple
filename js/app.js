@@ -809,6 +809,118 @@ function exporterGuidePDF() {
 }
 
 
+
+// ======================
+// FONCTIONS DE RÉINITIALISATION
+// ======================
+
+// --- Onglet 1 : agent ---
+function resetAgent() {
+    if (!confirm(
+        "Les informations de l'agent seront supprimées.\n" +
+        "Les autres données ne seront pas modifiées.\n\n" +
+        "Continuer ?"
+    )) return;
+
+    document.getElementById("nomAgent").value = "";
+    document.getElementById("prenomAgent").value = "";
+    document.getElementById("quotiteSelect").value = "100";
+    updateQuotiteAndResults();
+    sauvegarderTout();
+}
+
+// --- Onglet 2 : horaires hebdomadaires ---
+function resetHorairesHebdo() {
+    if (!confirm(
+        "Les horaires hebdomadaires seront supprimés.\n" +
+        "Les semaines hors vacances seront réinitialisées.\n" +
+        "Les semaines de vacances ne seront pas modifiées.\n\n" +
+        "Continuer ?"
+    )) return;
+
+    // Vider les horaires journaliers
+    document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
+        row.querySelector('.debut-matin').value = '';
+        row.querySelector('.fin-matin').value   = '';
+        row.querySelector('.debut-apm').value   = '';
+        row.querySelector('.fin-apm').value     = '';
+        updateRow(row);
+    });
+
+    // Remettre les pauses à 0
+    document.getElementById('nbPauses').value = 0;
+
+    // Recalculer le total hebdo (→ 0)
+    calculerTotalHebdo();
+
+    // Remettre le champ horaire hors vacances à 0
+    document.getElementById("horaireHorsVacances").value = "0.00";
+
+    // Réinitialiser uniquement les semaines hors vacances dans tableauSemainesData
+    semaines.forEach(semaine => {
+        const debut = formaterDate(semaine.debut);
+        const fin   = formaterDate(semaine.fin);
+        const result = estEnVacances(debut, fin);
+        if (!result.enVacances) {
+            if (tableauSemainesData[semaine.num]) {
+                tableauSemainesData[semaine.num].heures = 0;
+            } else {
+                tableauSemainesData[semaine.num] = { heures: 0 };
+            }
+        }
+    });
+
+    // Mettre à jour l'affichage de l'onglet 3 s'il est visible
+    const onglet3 = document.getElementById("semaines");
+    if (onglet3 && onglet3.classList.contains("active")) {
+        genererTableauSemaines();
+    }
+
+    calculerResultats();
+    sauvegarderTout();
+}
+
+// --- Onglet 3 : tableau annuel ---
+function resetTableauAnnuel() {
+    if (!confirm(
+        "Le tableau annuel sera entièrement réinitialisé.\n" +
+        "Les heures, heures supplémentaires, récupérations et commentaires de toutes les semaines seront supprimés.\n" +
+        "Les onglets 1 et 2 ne seront pas modifiés.\n\n" +
+        "Continuer ?"
+    )) return;
+
+    // Vider toutes les semaines dans tableauSemainesData
+    semaines.forEach(semaine => {
+        tableauSemainesData[semaine.num] = {
+            heures: 0,
+            heuresSup: 0,
+            heuresRecup: 0,
+            comment: ""
+        };
+    });
+
+    // Régénérer le tableau si visible
+    const onglet3 = document.getElementById("semaines");
+    if (onglet3 && onglet3.classList.contains("active")) {
+        genererTableauSemaines();
+    }
+
+    calculerResultats();
+    sauvegarderTout();
+}
+
+// --- Application : nouveau calcul ---
+function resetApplication() {
+    if (!confirm(
+        "Toutes les données enregistrées seront définitivement supprimées.\n" +
+        "Cette opération est irréversible.\n\n" +
+        "Continuer ?"
+    )) return;
+
+    localStorage.removeItem('eple_calculateur');
+    window.location.reload();
+}
+
 // ======================
 // INITIALISATION
 // ======================

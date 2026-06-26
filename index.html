@@ -16,7 +16,7 @@
         <!-- Onglets -->
         <div class="tabs">
             <div class="tab active" onclick="changerOnglet(event, 'guide')">Mode d'emploi</div>
-			<div class="tab" onclick="changerOnglet(event, 'quotite')">1. Quotité de travail</div>
+            <div class="tab" onclick="changerOnglet(event, 'quotite')">1. Quotité de travail</div>
             <div class="tab" onclick="changerOnglet(event, 'horaires')">2. Horaires hors vacances</div>
             <div class="tab" onclick="changerOnglet(event, 'semaines')">3. Tableau des semaines</div>
             <div class="tab" onclick="changerOnglet(event, 'resultats')">4. Résultats & Export</div>
@@ -55,6 +55,7 @@
                         <input type="text" id="heuresMaxInput" readonly>
                     </div>
                 </div>
+                <button onclick="resetAgent()">🔄 Réinitialiser les informations de l'agent</button>
                 <p><strong>Explication :</strong> Le temps de travail annuel pour un agent à 100% est de <strong>1593h</strong> (hors fractionnement), soit <strong>1607h</strong>. Cela comprend la journée de solidarité.</p>
             </div>
         </div>
@@ -151,6 +152,7 @@
 <input type="number" id="horaireHorsVacances" step="0.01" min="0" value="35.00" onchange="appliquerHorairesHorsVacances()">
 </div></div>
 <button onclick="appliquerHorairesHorsVacances()">Appliquer à toutes les semaines hors vacances</button>
+<button onclick="resetHorairesHebdo()">🔄 Réinitialiser les horaires hebdomadaires</button>
 </div>
 </div>
 
@@ -158,6 +160,12 @@
         <div id="semaines" class="tab-content">
             <div class="section">
                 <h2>Tableau des semaines 2026-2027</h2>
+                <p class="info-annee-scolaire">
+                    L'année scolaire 2026-2027 commence le <strong>mardi 1er septembre 2026</strong> et se termine le <strong>mardi 31 août 2027</strong>.<br />
+                    Il convient de <strong>modifier manuellement la saisie de la semaine 36</strong> (1ère ligne du tableau) pour refléter ce début en cours de semaine.<br />
+                    De même, <strong>ne comptez pas une semaine complète pour la semaine 35</strong> (dernière ligne), car l'année scolaire se termine en cours de semaine.
+                </p>
+                <button onclick="resetTableauAnnuel()">🔄 Réinitialiser le tableau annuel</button>
                 <div id="tableauSemaines"></div>
             </div>
         </div>
@@ -172,6 +180,7 @@
                 <h2>Export des données</h2>
                 <div class="export-buttons">
                     <button onclick="exporterPDF()">📄 Exporter en PDF</button>
+                    <button onclick="resetApplication()" style="background:#e74c3c;">🗑 Nouveau calcul</button>
                 </div>
             </div>
         </div>
