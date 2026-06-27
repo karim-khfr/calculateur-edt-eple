@@ -31,7 +31,7 @@ Il permet de calculer automatiquement les obligations de service en fonction de 
 * Saisie libre au format HH:MM.
 * Duplication rapide des horaires d'un jour vers d'autres jours.
 * Calcul automatique des temps de travail journaliers et hebdomadaires.
-* Prise en compte des pauses de 20 minutes comptabilisées comme temps de travail effectif.
+* Prise en compte des pauses de 20 minutes dans les cas où elles doivent être comptabilisées comme temps de travail effectif.
 * Report automatique du total hebdomadaire vers le tableau annuel.
 * Bouton de réinitialisation des horaires hebdomadaires.
 
@@ -114,11 +114,10 @@ Quatre niveaux de réinitialisation indépendants :
 
 Cet outil s'adresse principalement :
 
-* aux gestionnaires d'EPLE ;
+* aux personnels de direction d'EPLE ;
 * aux secrétaires généraux d'EPLE ;
-* aux personnels administratifs ;
-* aux collectivités territoriales ;
-* aux agents souhaitant suivre leur temps de travail annuel.
+* aux personnels administratifs des EPLE;
+* aux personnels ITRF exerçant en EPLE.
 
 ## Utilisation
 
