@@ -12,6 +12,7 @@
 <body>
     <div class="container">
         <h1>Outil de calcul du temps de travail EPLE</h1>
+        <p class="creator-info">Créé par Karim Khenifer — <a href="https://forms.gle/BVnH4CyoQPV14mzk6" target="_blank" rel="noopener noreferrer" class="contact-link">Contacter l'auteur</a></p>
 
         <!-- Onglets -->
         <div class="tabs">
@@ -308,80 +309,184 @@
             </div>
         </div>
 
-        <!-- Onglet 6 : Mode d'emploi -->
+        <!-- Onglet 0 : Mode d'emploi -->
         <div id="guide" class="tab-content active">
             <div class="section">
                 <button onclick="exporterGuidePDF()">📄 Télécharger le guide en PDF</button>
+
                 <h2>Mode d'emploi — Outil de calcul du temps de travail EPLE</h2>
                 <hr>
+
                 <h2>Présentation générale</h2>
-                <p>Cet outil permet de calculer le temps de travail annuel des agents administratifs et ITRF d'un EPLE. Il est organisé en <strong>4 onglets</strong> à renseigner dans l'ordre.</p>
+                <p>
+                    Cet outil permet de calculer et suivre le temps de travail annuel des agents administratifs et ITRF d'un EPLE. Il est organisé en <strong>4 onglets</strong> à renseigner dans l'ordre.
+                </p>
                 <ul>
-                    <li>Quotité de travail</li>
-                    <li>Horaires hors vacances</li>
-                    <li>Tableau des semaines</li>
-                    <li>Résultats & export</li>
+                    <li><strong>Mode d'emploi</strong> : Ce guide (que vous lisez actuellement).</li>
+                    <li><strong>Quotité de travail</strong> : Saisie des informations de base et configuration du calendrier.</li>
+                    <li><strong>Horaires hors vacances</strong> : Définition des horaires types.</li>
+                    <li><strong>Tableau des semaines</strong> : Saisie détaillée par semaine.</li>
+                    <li><strong>Résultats & Export</strong> : Récapitulatif et génération du PDF.</li>
+                    <li><strong>Informations réglementaires</strong> : Textes de référence.</li>
                 </ul>
-                <div class="result" style="background: #eef6ff; padding: 10px; border-left: 4px solid #2874f0; margin: 10px 0;">
-                    <strong>Bon à savoir :</strong> toutes vos saisies sont automatiquement sauvegardées dans votre navigateur. Vous pouvez fermer et rouvrir la page sans perdre vos données.
+
+                <div class="result">
+                    <strong>Bon à savoir :</strong> Toutes vos saisies sont automatiquement sauvegardées dans votre navigateur. Vous pouvez fermer et rouvrir la page sans perdre vos données.
                 </div>
                 <hr>
-                <h2>Onglet 1 — Quotité de travail</h2>
-                <p>C'est le point de départ. Renseignez :</p>
+
+                <h2>Onglet 1 — Informations de l'agent, quotité et configuration du calendrier</h2>
+                <p>
+                    <strong>Saisissez les informations suivantes :</strong>
+                </p>
                 <ul>
-                    <li><strong>Nom et prénom</strong> de l'agent.</li>
-                    <li><strong>Quotité de travail</strong> : 100 %, 90 %, 80 %, etc.</li>
+                    <li><strong>Nom et prénom</strong> : Ces informations seront automatiquement reportées dans le bloc signature du PDF.</li>
+                    <li><strong>Quotité de travail</strong> : Sélectionnez votre quotité (100%, 90%, 80%, etc.).</li>
+                    <li><strong>Configuration du calendrier</strong> : Sélectionnez <strong>l'année scolaire</strong> (ex: 2026-2027) et choisissez <strong>la zone académique</strong> (A, B ou C) pour adapter les dates des vacances scolaires.</li>
                 </ul>
-                <p>Le champ <strong>"Heures à effectuer"</strong> se calcule automatiquement.</p>
-                <p>Exemple : un agent à 80 % doit effectuer <strong>1 274,40 h</strong> dans l'année.</p>
+                <p>
+                    Le champ <strong>"Heures à effectuer"</strong> se calcule automatiquement en fonction de la quotité. Exemple : un agent à 80% doit effectuer <strong>1 274,40 h</strong> dans l'année (soit 1 288,40 h avec la journée de solidarité).
+                </p>
                 <hr>
+
                 <h2>Onglet 2 — Horaires hors vacances</h2>
-                <p>Cet onglet permet de définir les horaires habituels de la semaine type de l'agent (pendant le temps de présence des élèves).</p>
-                <h3>1. Saisir les horaires journaliers</h3>
+                <p>
+                    Cet onglet permet de définir les horaires habituels de l'agent <strong>hors périodes de vacances scolaires</strong>.
+                </p>
+
+                <h3>1. Calculateur hebdomadaire</h3>
+                <p>
+                    Saisissez les horaires de début et de fin pour chaque demi-journée (matin et après-midi). Les heures sont calculées automatiquement au format <strong>HH:MM</strong>.
+                </p>
                 <ul>
-                    <li>Renseignez les heures de début et de fin pour chaque demi-journée.</li>
-                    <li>Les calculs se font automatiquement.</li>
-                    <li>Laissez les champs vides pour les périodes non travaillées.</li>
+                    <li>Les champs vides sont considérés comme des périodes non travaillées.</li>
+                    <li>Le total hebdomadaire s'affiche en bas du tableau.</li>
+                    <li><strong>Fonction de duplication des jours</strong> : Cliquez sur le bouton <strong>"Dupliquer"</strong> pour copier les horaires d'un jour vers d'autres jours de la semaine (ex : dupliquer le lundi sur le mardi, mercredi, etc.).</li>
                 </ul>
+
                 <h3>2. Pauses de 20 minutes</h3>
-                <p>Si l'agent bénéficie de pauses de 20 minutes comptabilisées comme temps de travail effectif, indiquez leur nombre hebdomadaire.</p>
-                <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                <p>
+                    Si l'agent bénéficie de pauses de 20 minutes comptabilisées comme temps de travail effectif, indiquez leur nombre hebdomadaire dans le champ dédié.
+                </p>
+                <table>
                     <thead>
-                        <tr style="background:#f2f2f2;"><th>Nombre de pauses</th><th>Durée totale</th><th>Valeur décimale</th></tr>
+                        <tr>
+                            <th>Nombre de pauses</th>
+                            <th>Durée totale</th>
+                            <th>Valeur décimale</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr><td style="padding:6px; border:1px solid #ddd;">1 pause</td><td style="padding:6px; border:1px solid #ddd;">20 min</td><td style="padding:6px; border:1px solid #ddd;">0,33 h</td></tr>
-                        <tr><td style="padding:6px; border:1px solid #ddd;">2 pauses</td><td style="padding:6px; border:1px solid #ddd;">40 min</td><td style="padding:6px; border:1px solid #ddd;">0,66 h</td></tr>
-                        <tr><td style="padding:6px; border:1px solid #ddd;">3 pauses</td><td style="padding:6px; border:1px solid #ddd;">60 min</td><td style="padding:6px; border:1px solid #ddd;">1,00 h</td></tr>
+                        <tr><td>1 pause</td><td>20 min</td><td>0,33 h</td></tr>
+                        <tr><td>2 pauses</td><td>40 min</td><td>0,66 h</td></tr>
+                        <tr><td>3 pauses</td><td>60 min</td><td>1,00 h</td></tr>
                     </tbody>
                 </table>
-                <h3>3. Reporter le total dans le champ hebdomadaire</h3>
-                <p>Cliquez sur <strong>"Copier dans le champ ci-dessous"</strong> puis sur <strong>"Appliquer à toutes les semaines hors vacances"</strong>.</p>
+
+                <h3>3. Appliquer les horaires</h3>
+                <p>
+                    Une fois les horaires saisies :
+                </p>
+                <ol>
+                    <li>Cliquez sur <strong>"Copier dans le champ ci-dessous"</strong> pour reporter le total hebdomadaire.</li>
+                    <li>Cliquez sur <strong>"Appliquer à toutes les semaines hors vacances"</strong> pour remplir automatiquement le tableau des semaines (onglet 3).</li>
+                    <li>Si nécessaire, utilisez le bouton <strong>"Réinitialiser"</strong> pour effacer toutes les saisies de cet onglet et recommencer.</li>
+                </ol>
                 <hr>
+
                 <h2>Onglet 3 — Tableau des semaines</h2>
-                <p>Les semaines de vacances scolaires apparaissent en fond jaune.</p>
-                <table style="width:100%; border-collapse:collapse;">
-                    <thead><tr style="background:#f2f2f2;"><th>Colonne</th><th>Usage</th></tr></thead>
+                <p>
+                    Ce tableau permet de saisir les heures travaillées, supplémentaires et récupérées pour chaque semaine de l'année scolaire.
+                </p>
+                <p>
+                    Les semaines de vacances scolaires sont <strong>mises en évidence avec un fond jaune</strong>.
+                </p>
+
+                <p class="info-annee-scolaire">
+                    L'année scolaire 2026-2027 commence le <strong>mardi 1er septembre 2026</strong> et se termine le <strong>mardi 31 août 2027</strong>.
+                    Il convient de <strong>modifier manuellement la saisie de la semaine 36</strong> (1ère ligne du tableau) pour refléter ce début en cours de semaine.
+                    De même, <strong>ne comptez pas une semaine complète pour la semaine 35</strong> (dernière ligne), car l'année scolaire se termine en cours de semaine.
+                </p>
+
+                <h3>Saisie des heures</h3>
+                <p>
+                    Remplissez les colonnes suivantes pour chaque semaine :
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td style="padding:6px; border:1px solid #ddd;"><strong>Heures</strong></td><td style="padding:6px; border:1px solid #ddd;">Volume horaire hebdomadaire</td></tr>
-                        <tr><td style="padding:6px; border:1px solid #ddd;"><strong>Heures Sup</strong></td><td style="padding:6px; border:1px solid #ddd;">Heures supplémentaires</td></tr>
-                        <tr><td style="padding:6px; border:1px solid #ddd;"><strong>Heures Récup</strong></td><td style="padding:6px; border:1px solid #ddd;">Heures récupérées</td></tr>
-                        <tr><td style="padding:6px; border:1px solid #ddd;"><strong>Commentaires</strong></td><td style="padding:6px; border:1px solid #ddd;">Observations diverses</td></tr>
+                        <tr>
+                            <td><strong>Heures</strong></td>
+                            <td>Volume horaire hebdomadaire de base.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Heures Sup</strong></td>
+                            <td>Heures supplémentaires effectuées.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Heures Récup</strong></td>
+                            <td>Heures récupérées (ex : pour équilibrer un dépassement).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Commentaires</strong></td>
+                            <td>Observations ou détails spécifiques à la semaine.</td>
+                        </tr>
                     </tbody>
                 </table>
-                <h3>Saisie des heures</h3>
-                <p>Les heures doivent être saisies au format décimal (ex: 35 ou 35.5) ou s'auto-appliquent depuis l'onglet 2.</p>
+                <p>
+                    <strong>Réinitialisation</strong> : Utilisez le bouton <strong>"Réinitialiser"</strong> pour effacer toutes les saisies manuelles du tableau et repartir de zéro. Les heures issues de l'onglet 2 ne seront pas effacées.
+                </p>
                 <hr>
+
                 <h2>Onglet 4 — Résultats & Export</h2>
+                <p>
+                    Cet onglet affiche un récapitulatif des heures travaillées et permet d'exporter les données en PDF.
+                </p>
                 <ul>
-                    <li>Heures effectuées hors vacances scolaires</li>
-                    <li>Heures effectuées pendant les vacances scolaires</li>
-                    <li>Heures supplémentaires</li>
-                    <li>Heures récupérées</li>
-                    <li>Total général</li>
-                    <li>Écart par rapport au volume de référence</li>
+                    <li><strong>Total heures travaillées</strong> : Somme de toutes les heures saisies (hors vacances + vacances + heures sup - heures récup).</li>
+                    <li><strong>Différence</strong> : Écart entre le total et l'objectif annuel (en fonction de la quotité).</li>
                 </ul>
-                <p>Cliquez sur <strong>"Exporter en PDF"</strong> pour générer le document récapitulatif complet.</p>
+                <p>
+                    Cliquez sur <strong>"Exporter en PDF"</strong> pour générer un document récapitulatif complet, incluant :
+                </p>
+                <ul>
+                    <li>Les informations de l'agent (nom, prénom, quotité).</li>
+                    <li>Le tableau des semaines avec les heures saisies.</li>
+                    <li>Le total des heures travaillées et la différence par rapport à l'objectif.</li>
+                    <li>Un espace pour les signatures (agent et supérieur hiérarchique).</li>
+                </ul>
+                <p>
+                    <strong>Réinitialisation complète</strong> : Pour repartir de zéro, utilisez le bouton <strong>"Réinitialiser complètement l'outil"</strong>.
+                    Cela effacera toutes les données saisies dans tous les onglets.
+                </p>
+                <hr>
+
+                <h2>Onglet 5 — Informations réglementaires</h2>
+                <p>
+                    Cet onglet rappelle les textes de référence et les règles essentielles d'organisation du temps de travail.
+                    Vous y trouverez :
+                </p>
+                <ul>
+                    <li>Les décrets et circulaires applicables.</li>
+                    <li>Les règles générales (repos, amplitude, pauses).</li>
+                    <li>Les modalités de valorisation des heures (majorations).</li>
+                    <li>Les spécificités liées aux congés scolaires et jours fériés.</li>
+                </ul>
+                <hr>
+
+                <h2>Conseils pratiques</h2>
+                <ul>
+                    <li><strong>Respectez l'ordre des onglets</strong> pour une saisie cohérente.</li>
+                    <li><strong>Modifiez directement les semaines atypiques</strong> dans l'onglet 3 (ex : semaines avec heures supplémentaires ou récupérées).</li>
+                    <li><strong>Renseignez le nom et le prénom</strong> dans l'onglet 1 avant d'exporter le PDF.</li>
+                    <li><strong>Vérifiez les semaines 35 et 36</strong> : l'année scolaire 2026-2027 commence et se termine en cours de semaine.</li>
+                    <li>Les dates des vacances scolaires pour les années futures seront automatiquement mises à jour dès leur publication officielle par le Ministère de l'Éducation nationale (généralement entre octobre et novembre).</li>
+                </ul>
             </div>
         </div>
 

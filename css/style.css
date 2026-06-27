@@ -199,9 +199,96 @@ button:hover {
 
 .info-annee-scolaire {
     font-style: italic;
-    font-size: 0.9rem;
+    font-size: 0.9em;
     color: #555;
-    margin-bottom: 21px;
+    margin: 15px 0;
     line-height: 1.5;
     text-align: justify;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-left: 3px solid #3498db;
+    border-radius: 0 4px 4px 0;
+}
+
+/*
+.creator-info {
+    font-style: italic;
+    font-size: 0.8em;
+    color: #666;
+    text-align: left;
+    margin-top: -18px;
+    margin-bottom: 20px;
+    margin-left: 0;
+}
+
+.creator-info a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.creator-info a:hover {
+    text-decoration: underline;
+}
+
+.contact-link {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.contact-link:hover {
+    background-color: #2980b9;
+}
+*/
+
+.creator-info {
+    font-style: italic;
+    font-size: 0.85em;
+    /* Légèrement plus grand pour une meilleure lisibilité */
+    color: #444;
+    /* Gris plus foncé pour un meilleur contraste */
+    text-align: left;
+    margin-top: -10px;
+    /* Réduit légèrement l'espace */
+    margin-bottom: 20px;
+    margin-left: 0;
+}
+
+.creator-info a {
+    color: #fff;
+    /* Bleu foncé pour un meilleur contraste avec le texte gris */
+    text-decoration: none;
+    font-weight: 500;
+    /* Légèrement plus épais pour le lien */
+}
+
+.creator-info a:hover {
+    color: #fff;
+    /* Bleu clair au survol */
+    text-decoration: underline;
+}
+
+.contact-link {
+    display: inline-block;
+    background-color: #2c3e50;
+    /* Bleu foncé pour un meilleur contraste avec le texte blanc */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    border: 1px solid #2c3e50;
+    /* Bordure pour un meilleur rendu */
+}
+
+.contact-link:hover {
+    background-color: #3498db;
+    /* Bleu clair au survol */
+    border-color: #3498db;
 }
