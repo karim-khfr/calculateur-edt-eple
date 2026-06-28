@@ -76,6 +76,8 @@ function restaurerSauvegarde() {
                     rows[i].querySelector('.fin-apm').value = h.fa || "";
                 }
             });
+            // Recalculer les totaux journaliers et hebdomadaires après restauration
+            calculerTotalHebdo();
         }
 
         if (data['__tableauSemainesData']) {
@@ -149,7 +151,14 @@ async function initialiserCalendrierDynamique() {
     const anneeDepart = parseInt(anneeSelect.value);
     const zoneChoisie = zoneSelect.value;
 
+    // Afficher le spinner
+    const spinner = document.getElementById("spinnerCalendrier");
+    if (spinner) spinner.style.display = "inline-block";
+
     await chargerVacancesDepuisAPI(anneeDepart, zoneChoisie);
+
+    // Masquer le spinner
+    if (spinner) spinner.style.display = "none";
 
     let dateCurseur = new Date(anneeDepart, 8, 1); // 1er Septembre
     const jourRentrée = dateCurseur.getDay();
@@ -258,9 +267,46 @@ function genererTableauSemaines() {
 
 async function changerConfigurationCalendrier() {
     await initialiserCalendrierDynamique();
+    mettreAJourInfoAnneeScolaire();
     genererTableauSemaines();
     calculerResultats();
     sauvegarderTout();
+}
+
+// Met à jour dynamiquement le texte informatif selon l'année sélectionnée
+function mettreAJourInfoAnneeScolaire() {
+    const anneeSelect = document.getElementById("anneeScolaireSelect");
+    if (!anneeSelect) return;
+    const annee = parseInt(anneeSelect.value);
+    const anneeSuivante = annee + 1;
+
+    // Calculer le 1er septembre de l'année de départ pour trouver le premier lundi
+    const premierSept = new Date(annee, 8, 1);
+    const jourSemaine = premierSept.getDay(); // 0=dim, 1=lun...
+    const offsetLundi = jourSemaine === 0 ? -6 : jourSemaine === 1 ? 0 : -(jourSemaine - 1);
+    const debutSemaine = new Date(premierSept);
+    debutSemaine.setDate(debutSemaine.getDate() + offsetLundi);
+
+    // Trouver le dernier vendredi avant le 1er septembre de l'année suivante
+    const premierSeptSuivant = new Date(anneeSuivante, 8, 1);
+    const jourSemaineSuivant = premierSeptSuivant.getDay();
+    const offsetVendrediPrecedent = jourSemaineSuivant === 0 ? -2 : jourSemaineSuivant === 6 ? -1 : -(jourSemaineSuivant + 1) % 7 || -7;
+    const finAnnee = new Date(premierSeptSuivant);
+    finAnnee.setDate(finAnnee.getDate() + offsetVendrediPrecedent);
+
+    const joursNoms = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+    const formatDate = d => `${joursNoms[d.getDay()]} ${d.getDate()} ${moisNoms[d.getMonth()]} ${d.getFullYear()}`;
+
+    const texte = `L'année scolaire ${annee}-${anneeSuivante} débute le <strong>${formatDate(debutSemaine)}</strong>. `
+        + `Si la rentrée ne coïncide pas avec un lundi, pensez à <strong>ajuster manuellement les heures de la première semaine</strong>. `
+        + `De même, <strong>vérifiez la dernière semaine</strong> si l'année scolaire se termine en cours de semaine.`;
+
+    // Mettre à jour toutes les zones info-annee-scolaire de la page
+    document.querySelectorAll('.info-annee-scolaire').forEach(el => {
+        el.innerHTML = texte;
+    });
 }
 
 // ==========================================
@@ -454,30 +500,76 @@ function calculerResultats() {
 function dupliquerJour(bouton) {
     const rowSource = bouton.closest('tr');
     const jourSource = rowSource.cells[0].textContent.trim();
-
-    const reponse = prompt(
-        `Duplication des horaires de ${jourSource} :\n` +
-        `Saisissez les jours cibles séparés par une virgule (ex: Mardi, Jeudi, Vendredi) :`
-    );
-    if (!reponse) return;
-
     const dm = rowSource.querySelector('.debut-matin').value;
     const fm = rowSource.querySelector('.fin-matin').value;
     const da = rowSource.querySelector('.debut-apm').value;
     const fa = rowSource.querySelector('.fin-apm').value;
 
-    const joursCibles = reponse.split(',').map(j => j.trim().toLowerCase());
+    // Construire la liste des autres jours disponibles
+    const tousLesJours = [];
+    document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
+        const jour = row.cells[0].textContent.trim();
+        if (jour !== jourSource) tousLesJours.push(jour);
+    });
+
+    // Créer la modale
+    let modale = document.getElementById('modaleDuplication');
+    if (!modale) {
+        modale = document.createElement('div');
+        modale.id = 'modaleDuplication';
+        modale.style.cssText = `
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+        `;
+        document.body.appendChild(modale);
+    }
+
+    modale.innerHTML = `
+        <div style="background:#fff; border-radius:8px; padding:24px; min-width:300px; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+            <h3 style="margin:0 0 12px; color:#2c3e50;">Dupliquer les horaires de <em>${jourSource}</em></h3>
+            <p style="margin:0 0 12px; font-size:0.9em; color:#555;">Sélectionnez les jours cibles :</p>
+            <div id="checkboxJours" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+                ${tousLesJours.map(j => `
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.95em;">
+                        <input type="checkbox" value="${j}" style="width:auto; margin:0;"> ${j}
+                    </label>
+                `).join('')}
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="fermerModaleDuplication()" style="background:#aaa;">Annuler</button>
+                <button onclick="appliquerDuplication('${jourSource}', '${dm}', '${fm}', '${da}', '${fa}')">✔ Dupliquer</button>
+            </div>
+        </div>
+    `;
+    modale.style.display = 'flex';
+}
+
+function fermerModaleDuplication() {
+    const modale = document.getElementById('modaleDuplication');
+    if (modale) modale.style.display = 'none';
+}
+
+function appliquerDuplication(jourSource, dm, fm, da, fa) {
+    const cases = document.querySelectorAll('#checkboxJours input[type="checkbox"]:checked');
+    const joursCibles = Array.from(cases).map(cb => cb.value.toLowerCase());
+
+    if (joursCibles.length === 0) {
+        fermerModaleDuplication();
+        return;
+    }
 
     document.querySelectorAll('#heuresTable tbody tr').forEach(rowCible => {
         const jCible = rowCible.cells[0].textContent.trim().toLowerCase();
-        if (joursCibles.includes(jCible) && jCible !== jourSource.toLowerCase()) {
+        if (joursCibles.includes(jCible)) {
             rowCible.querySelector('.debut-matin').value = dm;
             rowCible.querySelector('.fin-matin').value = fm;
             rowCible.querySelector('.debut-apm').value = da;
             rowCible.querySelector('.fin-apm').value = fa;
         }
     });
+
     calculerTotalHebdo();
+    fermerModaleDuplication();
 }
 
 // ==========================================
@@ -618,23 +710,23 @@ function exporterPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
 
-    const bleuPrimaire  = [0, 0, 145];
-    const rougeAccent   = [201, 25, 30];
-    const grisTexte     = [60, 60, 60];
-    const grisLeger     = [200, 200, 200];
+    const bleuPrimaire = [0, 0, 145];
+    const rougeAccent = [201, 25, 30];
+    const grisTexte = [60, 60, 60];
+    const grisLeger = [200, 200, 200];
     const pageW = doc.internal.pageSize.width;
     const pageH = doc.internal.pageSize.height;
     const mL = 14, mR = 14;
 
     // Identité
-    const nomInput    = document.getElementById("nomAgent");
+    const nomInput = document.getElementById("nomAgent");
     const prenomInput = document.getElementById("prenomAgent");
-    const nom    = (nomInput    && nomInput.value    ? nomInput.value    : "Agent").toUpperCase();
+    const nom = (nomInput && nomInput.value ? nomInput.value : "Agent").toUpperCase();
     const prenom = (prenomInput && prenomInput.value ? prenomInput.value : "");
     const quotiteEl = document.getElementById("quotiteSelect");
-    const quotite   = quotiteEl ? quotiteEl.value + " %" : "100 %";
+    const quotite = quotiteEl ? quotiteEl.value + " %" : "100 %";
     const heuresRefEl = document.getElementById("heuresMaxInput");
-    const heuresRef   = heuresRefEl ? heuresRefEl.value : "1593h 00";
+    const heuresRef = heuresRefEl ? heuresRefEl.value : "1593h 00";
 
     // Helper : saut de page si besoin
     function checkY(needed) {
@@ -703,14 +795,14 @@ function exporterPDF() {
 
     const joursRows = [];
     document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
-        const jour    = row.cells[0] ? row.cells[0].textContent.trim() : "";
-        const dm      = row.querySelector('.debut-matin')  ? row.querySelector('.debut-matin').value  || "—" : "—";
-        const fm      = row.querySelector('.fin-matin')    ? row.querySelector('.fin-matin').value    || "—" : "—";
-        const hm      = row.querySelector('.heures-matin') ? row.querySelector('.heures-matin').textContent.trim() : "—";
-        const da      = row.querySelector('.debut-apm')    ? row.querySelector('.debut-apm').value    || "—" : "—";
-        const fa      = row.querySelector('.fin-apm')      ? row.querySelector('.fin-apm').value      || "—" : "—";
-        const ha      = row.querySelector('.heures-apm')   ? row.querySelector('.heures-apm').textContent.trim()  : "—";
-        const total   = row.querySelector('.total-jour')   ? row.querySelector('.total-jour').textContent.trim()  : "—";
+        const jour = row.cells[0] ? row.cells[0].textContent.trim() : "";
+        const dm = row.querySelector('.debut-matin') ? row.querySelector('.debut-matin').value || "—" : "—";
+        const fm = row.querySelector('.fin-matin') ? row.querySelector('.fin-matin').value || "—" : "—";
+        const hm = row.querySelector('.heures-matin') ? row.querySelector('.heures-matin').textContent.trim() : "—";
+        const da = row.querySelector('.debut-apm') ? row.querySelector('.debut-apm').value || "—" : "—";
+        const fa = row.querySelector('.fin-apm') ? row.querySelector('.fin-apm').value || "—" : "—";
+        const ha = row.querySelector('.heures-apm') ? row.querySelector('.heures-apm').textContent.trim() : "—";
+        const total = row.querySelector('.total-jour') ? row.querySelector('.total-jour').textContent.trim() : "—";
         joursRows.push([jour, `${dm} – ${fm}`, hm, `${da} – ${fa}`, ha, total]);
     });
 
@@ -723,7 +815,7 @@ function exporterPDF() {
         head: [['Jour', 'Matin (début – fin)', 'H matin', 'APM (début – fin)', 'H APM', 'Total']],
         body: joursRows,
         theme: 'striped',
-        headStyles: { fillColor: bleuPrimaire, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
+        headStyles: { fillColor: bleuPrimaire, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
         styles: { fontSize: 9, cellPadding: 3 },
         columnStyles: { 0: { fontStyle: 'bold' } }
     });
@@ -743,12 +835,12 @@ function exporterPDF() {
 
     const semRows = [];
     semaines.forEach(sem => {
-        const key   = `sem_${sem.num}_${sem.debut.replace(/\//g, '_')}`;
+        const key = `sem_${sem.num}_${sem.debut.replace(/\//g, '_')}`;
         const saved = tableauSemainesData[key] || { h: "", hs: "", hr: "", c: "" };
         const vacInfo = estEnVacances(sem.dateObjetDebut, sem.dateObjetFin);
 
-        const champHV   = document.getElementById('horaireHorsVacances');
-        const valHV     = champHV ? parseFloat(champHV.value) : 0;
+        const champHV = document.getElementById('horaireHorsVacances');
+        const valHV = champHV ? parseFloat(champHV.value) : 0;
         let heuresAff;
         if (saved.h !== "") {
             heuresAff = saved.h;
@@ -757,7 +849,7 @@ function exporterPDF() {
         } else if (valHV > 0) {
             const hE = Math.floor(valHV);
             const mE = Math.round((valHV - hE) * 60);
-            heuresAff = `${hE}:${String(mE).padStart(2,'0')}`;
+            heuresAff = `${hE}:${String(mE).padStart(2, '0')}`;
         } else {
             const txt = document.getElementById('totalHebdo') ? document.getElementById('totalHebdo').textContent.trim() : "0h 00";
             heuresAff = txt.replace('h ', ':').trim();
@@ -770,7 +862,7 @@ function exporterPDF() {
             heuresAff,
             saved.hs || "00:00",
             saved.hr || "00:00",
-            saved.c  || ""
+            saved.c || ""
         ]);
     });
 
@@ -780,7 +872,7 @@ function exporterPDF() {
         head: [['Sem.', 'Période', 'Type', 'Heures', 'H. Sup', 'H. Récup', 'Commentaire']],
         body: semRows,
         theme: 'striped',
-        headStyles: { fillColor: bleuPrimaire, textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
+        headStyles: { fillColor: bleuPrimaire, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
         styles: { fontSize: 8, cellPadding: 2 },
         columnStyles: {
             0: { cellWidth: 12 },
@@ -791,7 +883,7 @@ function exporterPDF() {
             5: { cellWidth: 16 },
             6: { cellWidth: 'auto' }
         },
-        didParseCell: function(data) {
+        didParseCell: function (data) {
             if (data.section === 'body' && data.column.index === 2) {
                 if (data.cell.text[0] === 'Vacances') {
                     data.cell.styles.textColor = [180, 100, 0];
@@ -799,7 +891,7 @@ function exporterPDF() {
                 }
             }
         },
-        didDrawPage: function() { y = doc.lastAutoTable.finalY + 6; }
+        didDrawPage: function () { y = doc.lastAutoTable.finalY + 6; }
     });
     y = doc.lastAutoTable.finalY + 10;
 
@@ -807,37 +899,37 @@ function exporterPDF() {
     checkY(60);
     sectionTitre("3. Résultats annuels");
 
-    const refElement    = document.getElementById("resReference");
-    const valeurRef     = refElement ? refElement.textContent.trim() : heuresRef;
-    const ecartTexte    = val("resEcart");
-    const ecartNegatif  = ecartTexte.includes('-');
-    const ecartPositif  = ecartTexte.includes('+') && !ecartTexte.includes('0h 00');
+    const refElement = document.getElementById("resReference");
+    const valeurRef = refElement ? refElement.textContent.trim() : heuresRef;
+    const ecartTexte = val("resEcart");
+    const ecartNegatif = ecartTexte.includes('-');
+    const ecartPositif = ecartTexte.includes('+') && !ecartTexte.includes('0h 00');
 
     doc.autoTable({
         startY: y,
         margin: { left: mL, right: mR },
         head: [['Indicateur', 'Volume horaire']],
         body: [
-            ["Heures scolaires réalisées",        val("resScolaire")],
-            ["Heures de vacances réalisées",       val("resVacances")],
-            ["Heures supplémentaires comptées",    val("resSup")],
-            ["Heures déduites / récupérées",       val("resRecup")],
-            ["TOTAL ANNUEL CALCULÉ",               val("resTotal")],
+            ["Heures scolaires réalisées", val("resScolaire")],
+            ["Heures de vacances réalisées", val("resVacances")],
+            ["Heures supplémentaires comptées", val("resSup")],
+            ["Heures déduites / récupérées", val("resRecup")],
+            ["TOTAL ANNUEL CALCULÉ", val("resTotal")],
             ["Obligation réglementaire de référence", valeurRef],
-            ["Balance (Écart annuel)",             ecartTexte]
+            ["Balance (Écart annuel)", ecartTexte]
         ],
         theme: 'striped',
-        headStyles: { fillColor: bleuPrimaire, textColor: [255,255,255], fontStyle: 'bold', fontSize: 10 },
+        headStyles: { fillColor: bleuPrimaire, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
         styles: { fontSize: 10, cellPadding: 4 },
-        didParseCell: function(data) {
+        didParseCell: function (data) {
             if (data.row.index === 4) {
                 data.cell.styles.fontStyle = 'bold';
             }
             if (data.row.index === 6) {
                 data.cell.styles.fontStyle = 'bold';
                 if (data.section === 'body' && data.column.index === 1) {
-                    if (ecartNegatif)       data.cell.styles.textColor = rougeAccent;
-                    else if (ecartPositif)  data.cell.styles.textColor = [39, 174, 96];
+                    if (ecartNegatif) data.cell.styles.textColor = rougeAccent;
+                    else if (ecartPositif) data.cell.styles.textColor = [39, 174, 96];
                 }
             }
         }
@@ -902,13 +994,18 @@ function resetAgent() {
     document.getElementById("prenomAgent").value = "";
     document.getElementById("quotiteSelect").value = "100";
     updateQuotiteAndResults();
+    sauvegarderTout();
 }
 
 function resetHorairesHebdo() {
+    // Vider les inputs de saisie
     document.querySelectorAll('#heuresTable input').forEach(i => i.value = "");
+    // Remettre à zéro les colonnes calculées (matin, APM, total journalier)
+    document.querySelectorAll('#heuresTable .heures-matin, #heuresTable .heures-apm, #heuresTable .total-jour').forEach(td => td.textContent = "0h 00");
     document.getElementById("nbPauses").value = "0";
     const champHV = document.getElementById("horaireHorsVacances");
     if (champHV) champHV.value = "0";
+    // Recalculer (remet totalHebdo à 0h 00 et sauvegarde)
     calculerTotalHebdo();
     sauvegarderTout();
 }
@@ -942,6 +1039,7 @@ window.onload = async function () {
     }
 
     await initialiserCalendrierDynamique();
+    mettreAJourInfoAnneeScolaire();
     updateQuotiteAndResults();
     calculerTotalHebdo();
     genererTableauSemaines();
