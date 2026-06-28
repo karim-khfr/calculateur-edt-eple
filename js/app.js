@@ -300,7 +300,7 @@ function mettreAJourInfoAnneeScolaire() {
     const formatDate = d => `${joursNoms[d.getDay()]} ${d.getDate()} ${moisNoms[d.getMonth()]} ${d.getFullYear()}`;
 
     const texte = `Ce tableau de l'année ${annee}-${anneeSuivante} débute le <strong>${formatDate(debutSemaine)}</strong>. `
-        + `Si la rentrée ne coïncide pas avec un lundi, pensez à <strong>ajuster manuellement les heures de la première semaine</strong>. `
+        + `Si la rentrée ne coïncide pas avec ce jour, pensez à <strong>ajuster manuellement les heures de la première semaine</strong>. `
         + `De même, <strong>vérifiez la dernière semaine</strong> si l'année scolaire se termine en cours de semaine.`;
 
     // Mettre à jour toutes les zones info-annee-scolaire de la page
