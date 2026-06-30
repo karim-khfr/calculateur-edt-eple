@@ -292,3 +292,149 @@ button:hover {
     /* Bleu clair au survol */
     border-color: #3498db;
 }
+
+/* ==========================================================
+   VERSION RESPONSIVE
+========================================================== */
+
+/*************** Tablette ***************/
+@media (max-width: 992px) {
+
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        text-align: center;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* Onglets */
+    .tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+        border-bottom: none;
+    }
+
+    .tab {
+        flex: 1 1 calc(50% - 5px);
+        margin-right: 0;
+        text-align: center;
+        border-radius: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .export-buttons {
+        flex-direction: column;
+    }
+
+}
+
+/*************** Smartphone ***************/
+@media (max-width:768px) {
+
+    body {
+        font-size: 15px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .section {
+        padding: 10px;
+    }
+
+    .tab {
+        flex: 1 1 100%;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    /*********************
+    TABLEAU ONGLET 2
+    *********************/
+    .calculateur-hebdo {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .calculateur-hebdo table {
+        min-width: 900px;
+    }
+
+    /*********************
+    TABLEAU ONGLET 3
+    *********************/
+    #tableauSemaines {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #tableauSemaines table {
+        min-width: 1300px;
+    }
+
+    /*********************
+    TABLEAU ONGLET 5
+    *********************/
+    #reglementaires {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #reglementaires table {
+        min-width: 700px;
+    }
+
+}
+
+/*************** Très petits téléphones ***************/
+@media (max-width:480px) {
+
+    .container {
+        margin: 5px;
+        padding: 8px;
+    }
+
+    h1 {
+        font-size: 1.3rem;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+    }
+
+    button {
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+}
