@@ -44,7 +44,6 @@
                     <li><strong>Tableau des semaines</strong> : Saisie détaillée par semaine.</li>
                     <li><strong>Résultats & Export</strong> : Récapitulatif et génération du PDF.</li>
                     <li><strong>Informations réglementaires</strong> : Textes de référence.</li>
-					<li><strong>Contact</strong> : Un formulaire pour contacter le développeur de cet outil.</li>
                 </ul>
 
                 <div class="result">
@@ -491,12 +490,21 @@
             </div>
         </div>
 
-                <!-- Onglet 6 : Contact -->
+        <!-- Onglet 6 : Contact -->
         <div id="contact" class="tab-content">
-            <div class="section">
-                <h2>Me contacter</h2>
+            <div class="contact-container">
+                <h2>Contactez-moi</h2>
                 <form id="contact-form" class="contact-form" action="https://formsubmit.co" method="POST">
+                    <!-- Adresse de destination -->
                     <input type="hidden" name="_to" value="karim.khenifer@ac-grenoble.fr">
+                    
+                    <!-- Protection anti-spam (Honeypot) -->
+                    <input type="text" name="_honey" style="display:none">
+
+                    <!-- Configuration FormSubmit : Désactive la page de capture de FormSubmit -->
+                    <input type="hidden" name="_next" value="">
+                    <input type="hidden" name="_captcha" value="false">
+
                     <label for="nom">Nom :</label>
                     <input type="text" id="nom" name="nom" required placeholder="Votre nom">
 
@@ -506,22 +514,14 @@
                     <label for="message">Message :</label>
                     <textarea id="message" name="message" required placeholder="Votre message"></textarea>
 
-                    <button type="submit">Envoyer</button>
+                    <button type="submit" id="btn-contact-submit">Envoyer</button>
                 </form>
+                <div id="success-message" class="success-message">
+                    Merci ! Votre message a été envoyé avec succès.
+                </div>
             </div>
         </div>
 
-            <!-- Script pour afficher le message de confirmation -->
-    <script>
-        document.getElementById("contact-form").addEventListener("submit", function(event) {
-            // Afficher le message de confirmation
-            document.getElementById("success-message").style.display = "block";
-            // Réinitialiser le formulaire
-            this.reset();
-            // Empêcher le comportement par défaut (pour la démo locale)
-            // event.preventDefault(); // À commenter ou supprimer en production
-        });
-    </script>
     <script src="js/app.js"></script>
     <script>
         function exporterGuidePDF() {

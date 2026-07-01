@@ -1048,32 +1048,60 @@ window.onload = async function () {
 
 // ===== SCRIPT POUR LE FORMULAIRE DE CONTACT =====
 document.addEventListener("DOMContentLoaded", function () {
-    const contactForm = document.getElementById("contact-form");
-    if (contactForm) {
-        contactForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const formData = new FormData(contactForm);
-            const successMessage = document.getElementById("success-message");
+    // Gestionnaire d'envoi du formulaire de contact avec indicateur de chargement
+    const contactForm = document.getElementById('contact-form');
+    const btnSubmit = document.getElementById('btn-contact-submit');
+    const successMessage = document.getElementById('success-message');
 
-            try {
-                const response = await fetch(contactForm.action, {
-                    method: "POST",
-                    body: formData,
-                });
+    if (contactForm && btnSubmit) {
+        contactForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Empêche le rechargement de la page
 
-                if (response.ok) {
-                    if (successMessage) {
-                        successMessage.style.display = "block";
-                    }
-                    contactForm.reset();
-                } else {
-                    console.error("Erreur FormSubmit :", response.status);
-                    alert("Une erreur est survenue. Veuillez réessayer.");
+            // 1. Passage en mode "Chargement"
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Envoi en cours...";
+            btnSubmit.style.opacity = "0.7";
+            btnSubmit.style.cursor = "not-allowed";
+
+            // 2. Récupération des données du formulaire
+            const formData = new FormData(this);
+
+            // 3. Envoi asynchrone à FormSubmit
+            fetch(this.action, {
+                method: this.method,
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
                 }
-            } catch (error) {
-                console.error("Erreur réseau :", error);
-                alert("Une erreur réseau est survenue.");
-            }
+            })
+                .then(response => {
+                    // 4. Réinitialisation du bouton après réception de la réponse
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Envoyer";
+                    btnSubmit.style.opacity = "1";
+                    btnSubmit.style.cursor = "pointer";
+
+                    if (response.ok) {
+                        // Succès : on affiche le message de réussite et on vide le formulaire
+                        if (successMessage) {
+                            successMessage.style.display = 'block';
+                            // Optionnel : masquer le message après 5 secondes
+                            setTimeout(() => { successMessage.style.display = 'none'; }, 5000);
+                        }
+                        contactForm.reset();
+                    } else {
+                        alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+                    }
+                })
+                .catch(error => {
+                    // En cas de coupure réseau ou crash
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Envoyer";
+                    btnSubmit.style.opacity = "1";
+                    btnSubmit.style.cursor = "pointer";
+                    console.error("Erreur de liaison :", error);
+                    alert("Impossible de joindre le serveur. Vérifiez votre connexion internet.");
+                });
         });
     }
 });
