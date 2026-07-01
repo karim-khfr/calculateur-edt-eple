@@ -494,17 +494,14 @@
         <div id="contact" class="tab-content">
             <div class="contact-container">
                 <h2>Contactez-moi</h2>
-                <form id="contact-form" class="contact-form" action="https://formsubmit.co" method="POST">
-                    <!-- Adresse de destination -->
-                    <input type="hidden" name="_to" value="karim.khenifer@ac-grenoble.fr">
-                    
+                <form id="contact-form" class="contact-form" action="https://formsubmit.co/karim.khenifer@ac-grenoble.fr" method="POST">
+                                                     
                     <!-- Protection anti-spam (Honeypot) -->
                     <input type="text" name="_honey" style="display:none">
 
-                    <!-- Configuration FormSubmit : Désactive la page de capture de FormSubmit -->
-                    <input type="hidden" name="_next" value="">
-                    <input type="hidden" name="_captcha" value="false">
-
+					<input type="hidden" name="_next" value="https://karim-khfr.github.io/calculateur-edt-eple/">
+            		<input type="hidden" name="_captcha" value="false">
+					
                     <label for="nom">Nom :</label>
                     <input type="text" id="nom" name="nom" required placeholder="Votre nom">
 
