@@ -1048,32 +1048,31 @@ window.onload = async function () {
 
 // ===== SCRIPT POUR LE FORMULAIRE DE CONTACT =====
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("contact-form");
-    if (form) {
-        form.addEventListener("submit", async function (event) {
+    const contactForm = document.getElementById("contact-form");
+    if (contactForm) {
+        contactForm.addEventListener("submit", async function (event) {
             event.preventDefault();
-            const formData = new FormData(form);
+            const formData = new FormData(contactForm);
+            const successMessage = document.getElementById("success-message");
 
             try {
-                const response = await fetch(form.action, {
+                const response = await fetch(contactForm.action, {
                     method: "POST",
                     body: formData,
-                    headers: {
-                        "Accept": "application/json"
-                    }
                 });
 
                 if (response.ok) {
-                    const successMessage = document.getElementById("success-message");
                     if (successMessage) {
                         successMessage.style.display = "block";
                     }
-                    form.reset();
+                    contactForm.reset();
                 } else {
-                    console.error("Erreur lors de l'envoi du formulaire.");
+                    console.error("Erreur FormSubmit :", response.status);
+                    alert("Une erreur est survenue. Veuillez réessayer.");
                 }
             } catch (error) {
                 console.error("Erreur réseau :", error);
+                alert("Une erreur réseau est survenue.");
             }
         });
     }
