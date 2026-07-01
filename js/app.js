@@ -295,7 +295,7 @@ function mettreAJourInfoAnneeScolaire() {
     finAnnee.setDate(finAnnee.getDate() + offsetVendrediPrecedent);
 
     const joursNoms = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-    const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const moisNoms = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
     const formatDate = d => `${joursNoms[d.getDay()]} ${d.getDate()} ${moisNoms[d.getMonth()]} ${d.getFullYear()}`;
 
@@ -1045,3 +1045,36 @@ window.onload = async function () {
     genererTableauSemaines();
     calculerResultats();
 };
+
+// ===== SCRIPT POUR LE FORMULAIRE DE CONTACT =====
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("contact-form");
+    if (form) {
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (response.ok) {
+                    const successMessage = document.getElementById("success-message");
+                    if (successMessage) {
+                        successMessage.style.display = "block";
+                    }
+                    form.reset();
+                } else {
+                    console.error("Erreur lors de l'envoi du formulaire.");
+                }
+            } catch (error) {
+                console.error("Erreur réseau :", error);
+            }
+        });
+    }
+});
