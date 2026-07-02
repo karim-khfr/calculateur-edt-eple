@@ -752,7 +752,7 @@ function exporterPDF() {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
-        doc.text("BILAN ANNUEL DE TEMPS DE TRAVAIL", mL, 10);
+        doc.text("EMPLOI DU TEMPS ANNUEL", mL, 10);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
@@ -790,7 +790,7 @@ function exporterPDF() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
-    doc.text("BILAN ANNUEL DE TEMPS DE TRAVAIL", mL, 22);
+    doc.text("EMPLOI DU TEMPS ANNUEL", mL, 22);
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
