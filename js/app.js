@@ -251,16 +251,30 @@ function genererTableauSemaines() {
             affichageHeures = vacInfo.enVacances ? "00:00" : horaireTypeBaseHHMM;
         }
 
+        // Fonction utilitaire : échappe une valeur pour un attribut HTML
+        function attrSafe(val) {
+            return String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
         tr.innerHTML = `
             <td><strong>Semaine ${sem.num}</strong><br><small style="color:#555;">du ${sem.debut} au ${sem.fin}</small></td>
             <td><span class="badge" style="background:${vacInfo.enVacances ? '#f39c12' : '#27ae60'}; color:#fff; padding:3px 6px; border-radius:3px; font-size:11px;">${vacInfo.enVacances ? 'Vacances' : 'Scolaire'}</span></td>
-            <td><input type="text" class="s-heures" data-key="${key}" value="${affichageHeures}" placeholder="35:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
-            <td><input type="text" class="s-heures-sup" data-key="${key}" value="${saved.hs || '00:00'}" placeholder="00:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
-            <td><input type="text" class="s-heures-recup" data-key="${key}" value="${saved.hr || '00:00'}" placeholder="00:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
-            <td style="min-width: 250px; width: 33%;">
-                <textarea class="s-comm" data-key="${key}" placeholder="..." style="width: 100% !important; box-sizing: border-box; resize: vertical; min-height: 38px; height: 38px; font-family: inherit; font-size: inherit; padding: 4px; vertical-align: middle;" oninput="sauvegarderSemaineEnLigne(this)">${saved.c || ''}</textarea>
-            </td>
+            <td><input type="text" class="s-heures" data-key="${attrSafe(key)}" value="${attrSafe(affichageHeures)}" placeholder="35:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
+            <td><input type="text" class="s-heures-sup" data-key="${attrSafe(key)}" value="${attrSafe(saved.hs || '00:00')}" placeholder="00:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
+            <td><input type="text" class="s-heures-recup" data-key="${attrSafe(key)}" value="${attrSafe(saved.hr || '00:00')}" placeholder="00:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
+            <td style="min-width: 250px; width: 33%;"></td>
         `;
+
+        // Injection sécurisée du commentaire via textContent (protection XSS)
+        const tdComm = tr.querySelector('td:last-child');
+        const textarea = document.createElement('textarea');
+        textarea.className = 's-comm';
+        textarea.setAttribute('data-key', key);
+        textarea.placeholder = '...';
+        textarea.style.cssText = 'width: 100% !important; box-sizing: border-box; resize: vertical; min-height: 38px; height: 38px; font-family: inherit; font-size: inherit; padding: 4px; vertical-align: middle;';
+        textarea.setAttribute('oninput', 'sauvegarderSemaineEnLigne(this)');
+        textarea.textContent = saved.c || ''; // textContent : jamais interprété comme HTML
+        tdComm.appendChild(textarea);
         tbody.appendChild(tr);
     });
 }

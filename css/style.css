@@ -223,40 +223,6 @@ button:hover {
     margin-left: 0;
 }
 
-.creator-info a {
-    color: #fff;
-    /* Bleu foncé pour un meilleur contraste avec le texte gris */
-    text-decoration: none;
-    font-weight: 500;
-    /* Légèrement plus épais pour le lien */
-}
-
-.creator-info a:hover {
-    color: #fff;
-    /* Bleu clair au survol */
-    text-decoration: underline;
-}
-
-.contact-link {
-    display: inline-block;
-    background-color: #2c3e50;
-    /* Bleu foncé pour un meilleur contraste avec le texte blanc */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    transition: background-color 0.3s;
-    border: 1px solid #2c3e50;
-    /* Bordure pour un meilleur rendu */
-}
-
-.contact-link:hover {
-    background-color: #3498db;
-    /* Bleu clair au survol */
-    border-color: #3498db;
-}
-
 /* Style du formulaire */
 .contact-container {
     max-width: 100%;
