@@ -31,7 +31,15 @@ function changerOnglet(event, ongletId) {
 // ==========================================
 let tableauSemainesData = {};
 
+// Debounce : évite de sérialiser le DOM à chaque frappe clavier
+// La sauvegarde réelle n'a lieu que 600ms après la dernière modification
+let _timerSauvegarde = null;
 function sauvegarderTout() {
+    clearTimeout(_timerSauvegarde);
+    _timerSauvegarde = setTimeout(_executerSauvegarde, 600);
+}
+
+function _executerSauvegarde() {
     const data = {};
     document.querySelectorAll('input, textarea, select').forEach(el => {
         const key = el.id || el.name;
@@ -52,6 +60,13 @@ function sauvegarderTout() {
     data['__tableauSemainesData'] = JSON.stringify(tableauSemainesData);
 
     localStorage.setItem('eple_calculateur', JSON.stringify(data));
+}
+
+// Sauvegarde immédiate (sans debounce) pour les actions critiques
+// (reset, appliquerHoraires, etc.)
+function sauvegarderImmediatement() {
+    clearTimeout(_timerSauvegarde);
+    _executerSauvegarde();
 }
 
 function restaurerSauvegarde() {
@@ -104,8 +119,45 @@ function sauvegarderSemaineEnLigne(input) {
 }
 
 // ==========================================
-// CALENDRIER DYNAMIQUE & API VACANCES MINISTÈRE
+// GÉNÉRATION DYNAMIQUE DES ANNÉES SCOLAIRES
 // ==========================================
+
+// Génère les options du select d'année scolaire :
+// - Année en cours (basée sur la date réelle)
+// - 2 années précédentes
+// - 2 années suivantes
+// soit 5 options glissantes, toujours à jour
+function genererOptionsAnneeScolaire() {
+    const select = document.getElementById("anneeScolaireSelect");
+    if (!select) return;
+
+    const maintenant = new Date();
+    // L'année scolaire "courante" commence en septembre :
+    // si on est avant septembre, l'année scolaire en cours a démarré l'année précédente
+    const anneeCoursDebut = maintenant.getMonth() >= 8
+        ? maintenant.getFullYear()
+        : maintenant.getFullYear() - 1;
+
+    // Récupérer l'année éventuellement sauvegardée
+    let anneeSauvegardee = null;
+    try {
+        const saved = JSON.parse(localStorage.getItem('eple_calculateur') || '{}');
+        if (saved['anneeScolaireSelect']) anneeSauvegardee = parseInt(saved['anneeScolaireSelect']);
+    } catch(e) {}
+
+    select.innerHTML = '';
+
+    for (let offset = -2; offset <= 2; offset++) {
+        const anneeDebut = anneeCoursDebut + offset;
+        const option = document.createElement('option');
+        option.value = anneeDebut;
+        option.textContent = `${anneeDebut}-${anneeDebut + 1}`;
+        if (anneeDebut === (anneeSauvegardee || anneeCoursDebut)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    }
+}
 let semaines = [];
 let listeVacancesAPI = [];
 
@@ -284,7 +336,7 @@ async function changerConfigurationCalendrier() {
     mettreAJourInfoAnneeScolaire();
     genererTableauSemaines();
     calculerResultats();
-    sauvegarderTout();
+    sauvegarderImmediatement();
 }
 
 // Met à jour dynamiquement le texte informatif selon l'année sélectionnée
@@ -403,7 +455,7 @@ function copierTotalHebdo() {
 function appliquerHorairesHorsVacances() {
     genererTableauSemaines();
     calculerResultats();
-    sauvegarderTout();
+    sauvegarderImmediatement();
     alert("Les horaires types ont été appliqués sur l'ensemble des semaines scolaires.");
 }
 
@@ -1008,7 +1060,7 @@ function resetAgent() {
     document.getElementById("prenomAgent").value = "";
     document.getElementById("quotiteSelect").value = "100";
     updateQuotiteAndResults();
-    sauvegarderTout();
+    sauvegarderImmediatement();
 }
 
 function resetHorairesHebdo() {
@@ -1021,7 +1073,7 @@ function resetHorairesHebdo() {
     if (champHV) champHV.value = "0";
     // Recalculer (remet totalHebdo à 0h 00 et sauvegarde)
     calculerTotalHebdo();
-    sauvegarderTout();
+    sauvegarderImmediatement();
 }
 
 function resetTableauAnnuel() {
@@ -1029,7 +1081,7 @@ function resetTableauAnnuel() {
         tableauSemainesData = {};
         genererTableauSemaines();
         calculerResultats();
-        sauvegarderTout();
+        sauvegarderImmediatement();
     }
 }
 
@@ -1044,6 +1096,10 @@ function resetApplication() {
 // DEMARRAGE AUTOMATIQUE
 // ==========================================
 window.onload = async function () {
+    // 1. Générer les options d'années scolaires dynamiquement
+    genererOptionsAnneeScolaire();
+
+    // 2. Restaurer la sauvegarde (inclut la sélection d'année sauvegardée)
     restaurerSauvegarde();
 
     // CORRECTION : Si aucune sauvegarde n'existe, on force le champ à 0 pour éviter les 35h par défaut du HTML
