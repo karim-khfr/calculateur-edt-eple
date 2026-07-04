@@ -267,6 +267,75 @@ function estEnVacances(dateDebut, dateFin) {
     return { enVacances: false, nom: "Hors vacances" };
 }
 
+// ==========================================
+// JOURS FÉRIÉS FRANÇAIS
+// ==========================================
+
+// Calcule tous les jours fériés français pour une année donnée
+// Algorithme de Meeus/Jones/Butcher pour la date de Pâques
+function getJoursFeries(annee) {
+    // Calcul de Pâques
+    const a = annee % 19;
+    const b = Math.floor(annee / 100);
+    const c = annee % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const moisPaques = Math.floor((h + l - 7 * m + 114) / 31); // 3=mars, 4=avril
+    const jourPaques  = ((h + l - 7 * m + 114) % 31) + 1;
+    const paques = new Date(annee, moisPaques - 1, jourPaques);
+
+    const j = (d) => new Date(annee, d[0] - 1, d[1]); // [mois, jour]
+    const pj = (offset) => {                            // relatif à Pâques
+        const d = new Date(paques);
+        d.setDate(d.getDate() + offset);
+        return d;
+    };
+    const key = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    const feries = {};
+    feries[key(j([1,  1]))]  = "Jour de l'An";
+    feries[key(pj(-2))]      = "Vendredi Saint";   // (Alsace-Moselle, on le garde pour info)
+    feries[key(pj(1))]       = "Lundi de Pâques";
+    feries[key(j([5,  1]))]  = "Fête du Travail";
+    feries[key(j([5,  8]))]  = "Victoire 1945";
+    feries[key(pj(39))]      = "Ascension";
+    feries[key(pj(50))]      = "Lundi de Pentecôte";
+    feries[key(j([7,  14]))] = "Fête Nationale";
+    feries[key(j([8,  15]))] = "Assomption";
+    feries[key(j([11, 1]))]  = "Toussaint";
+    feries[key(j([11, 11]))] = "Armistice";
+    feries[key(j([12, 25]))] = "Noël";
+
+    return feries; // { "2026-05-14": "Ascension", ... }
+}
+
+// Retourne la liste des jours fériés tombant dans une semaine (lundi→samedi)
+// sous la forme [{date, nom}, ...]
+function getJoursFeriesDansSemaine(dateDebutSemaine, dateFinSemaine, anneeDepart) {
+    // Les fériés peuvent chevaucher deux années civiles dans une année scolaire
+    const feriesAnnee1 = getJoursFeries(anneeDepart);
+    const feriesAnnee2 = getJoursFeries(anneeDepart + 1);
+    const tousLesFeries = { ...feriesAnnee1, ...feriesAnnee2 };
+
+    const resultats = [];
+    const curseur = new Date(dateDebutSemaine);
+    while (curseur <= dateFinSemaine) {
+        const k = `${curseur.getFullYear()}-${String(curseur.getMonth()+1).padStart(2,'0')}-${String(curseur.getDate()).padStart(2,'0')}`;
+        if (tousLesFeries[k]) {
+            resultats.push({ date: new Date(curseur), nom: tousLesFeries[k] });
+        }
+        curseur.setDate(curseur.getDate() + 1);
+    }
+    return resultats;
+}
+
 function genererTableauSemaines() {
     const tbody = document.getElementById("semainesTableContent");
     if (!tbody) return;
@@ -287,12 +356,24 @@ function genererTableauSemaines() {
         }
     }
 
+    // Année scolaire pour le calcul des fériés
+    const anneeSelectGTS = document.getElementById("anneeScolaireSelect");
+    const anneeGTS = anneeSelectGTS ? parseInt(anneeSelectGTS.value) : new Date().getFullYear();
+    const moisNomsCourt = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
     semaines.forEach(sem => {
         const vacInfo = estEnVacances(sem.dateObjetDebut, sem.dateObjetFin);
         const tr = document.createElement("tr");
 
+        // Détecter les jours fériés dans la semaine
+        const feriesSemaine = getJoursFeriesDansSemaine(sem.dateObjetDebut, sem.dateObjetFin, anneeGTS);
+        const aDesFeeries = feriesSemaine.length > 0;
+
+        // Priorité couleur : vacances (jaune) > férié hors vacances (bleu pâle)
         if (vacInfo.enVacances) {
             tr.style.backgroundColor = "#fff9c4";
+        } else if (aDesFeeries) {
+            tr.style.backgroundColor = "#e8f4fc";
         }
 
         const key = `sem_${sem.num}_${sem.debut.replace(/\//g, '_')}`;
@@ -303,13 +384,25 @@ function genererTableauSemaines() {
             affichageHeures = vacInfo.enVacances ? "00:00" : horaireTypeBaseHHMM;
         }
 
-        // Fonction utilitaire : échappe une valeur pour un attribut HTML
         function attrSafe(val) {
             return String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
+        // Texte des fériés (affiché uniquement hors vacances)
+        const nomsFeries = feriesSemaine.map(f => {
+            const j = f.date.getDate();
+            const m = moisNomsCourt[f.date.getMonth()];
+            return `${f.nom} (${j} ${m})`;
+        }).join(', ');
+
         tr.innerHTML = `
-            <td><strong>Semaine ${sem.num}</strong><br><small style="color:#555;">du ${sem.debut} au ${sem.fin}</small></td>
+            <td>
+                <strong>Semaine ${sem.num}</strong><br>
+                <small style="color:#555;">du ${sem.debut} au ${sem.fin}</small>
+                ${aDesFeeries && !vacInfo.enVacances
+                    ? `<br><small style="color:#2980b9; font-style:italic;">🔵 ${nomsFeries}</small>`
+                    : ''}
+            </td>
             <td><span class="badge" style="background:${vacInfo.enVacances ? '#f39c12' : '#27ae60'}; color:#fff; padding:3px 6px; border-radius:3px; font-size:11px;">${vacInfo.enVacances ? 'Vacances' : 'Scolaire'}</span></td>
             <td><input type="text" class="s-heures" data-key="${attrSafe(key)}" value="${attrSafe(affichageHeures)}" placeholder="35:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
             <td><input type="text" class="s-heures-sup" data-key="${attrSafe(key)}" value="${attrSafe(saved.hs || '00:00')}" placeholder="00:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
@@ -317,7 +410,6 @@ function genererTableauSemaines() {
             <td style="min-width: 250px; width: 33%;"></td>
         `;
 
-        // Injection sécurisée du commentaire via textContent (protection XSS)
         const tdComm = tr.querySelector('td:last-child');
         const textarea = document.createElement('textarea');
         textarea.className = 's-comm';
@@ -325,7 +417,7 @@ function genererTableauSemaines() {
         textarea.placeholder = '...';
         textarea.style.cssText = 'width: 100% !important; box-sizing: border-box; resize: vertical; min-height: 38px; height: 38px; font-family: inherit; font-size: inherit; padding: 4px; vertical-align: middle;';
         textarea.setAttribute('oninput', 'sauvegarderSemaineEnLigne(this)');
-        textarea.textContent = saved.c || ''; // textContent : jamais interprété comme HTML
+        textarea.textContent = saved.c || '';
         tdComm.appendChild(textarea);
         tbody.appendChild(tr);
     });
