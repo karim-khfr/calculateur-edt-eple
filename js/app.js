@@ -207,7 +207,11 @@ async function initialiserCalendrierDynamique() {
     const spinner = document.getElementById("spinnerCalendrier");
     if (spinner) spinner.style.display = "inline-block";
 
-    await chargerVacancesDepuisAPI(anneeDepart, zoneChoisie);
+    // Charger vacances scolaires ET jours fériés en parallèle
+    await Promise.all([
+        chargerVacancesDepuisAPI(anneeDepart, zoneChoisie),
+        chargerJoursFeriesDepuisAPI(anneeDepart)
+    ]);
 
     // Masquer le spinner
     if (spinner) spinner.style.display = "none";
@@ -268,73 +272,45 @@ function estEnVacances(dateDebut, dateFin) {
 }
 
 // ==========================================
-// JOURS FÉRIÉS FRANÇAIS
+// JOURS FÉRIÉS FRANÇAIS (API DINUM)
 // ==========================================
 
-// Calcule tous les jours fériés français pour une année donnée
-// Algorithme de Meeus/Jones/Butcher pour la date de Pâques
-function getJoursFeries(annee) {
-    // Calcul de Pâques
-    const a = annee % 19;
-    const b = Math.floor(annee / 100);
-    const c = annee % 100;
-    const d = Math.floor(b / 4);
-    const e = b % 4;
-    const f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3);
-    const h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4);
-    const k = c % 4;
-    const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const moisPaques = Math.floor((h + l - 7 * m + 114) / 31); // 3=mars, 4=avril
-    const jourPaques  = ((h + l - 7 * m + 114) % 31) + 1;
-    const paques = new Date(annee, moisPaques - 1, jourPaques);
+// Dictionnaire des jours fériés chargé depuis l'API officielle
+// { "2026-05-14": "Ascension", "2027-01-01": "1er janvier", ... }
+let listeJoursFeriesAPI = {};
 
-    const j = (d) => new Date(annee, d[0] - 1, d[1]); // [mois, jour]
-    const pj = (offset) => {                            // relatif à Pâques
-        const d = new Date(paques);
-        d.setDate(d.getDate() + offset);
-        return d;
-    };
-    const key = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-    const feries = {};
-    feries[key(j([1,  1]))]  = "Jour de l'An";
-    feries[key(pj(-2))]      = "Vendredi Saint";   // (Alsace-Moselle, on le garde pour info)
-    feries[key(pj(1))]       = "Lundi de Pâques";
-    feries[key(j([5,  1]))]  = "Fête du Travail";
-    feries[key(j([5,  8]))]  = "Victoire 1945";
-    feries[key(pj(39))]      = "Ascension";
-    feries[key(pj(50))]      = "Lundi de Pentecôte";
-    feries[key(j([7,  14]))] = "Fête Nationale";
-    feries[key(j([8,  15]))] = "Assomption";
-    feries[key(j([11, 1]))]  = "Toussaint";
-    feries[key(j([11, 11]))] = "Armistice";
-    feries[key(j([12, 25]))] = "Noël";
-
-    return feries; // { "2026-05-14": "Ascension", ... }
+// Charge les jours fériés pour deux années civiles (N et N+1)
+// via https://calendrier.api.gouv.fr/jours-feries/metropole/{annee}.json
+async function chargerJoursFeriesDepuisAPI(anneeDepart) {
+    try {
+        const [res1, res2] = await Promise.all([
+            fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart}.json`),
+            fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart + 1}.json`)
+        ]);
+        const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+        // Fusionner les deux années dans un seul dictionnaire
+        listeJoursFeriesAPI = { ...data1, ...data2 };
+    } catch (error) {
+        console.error("Erreur API jours fériés DINUM :", error);
+        listeJoursFeriesAPI = {};
+    }
 }
 
 // Retourne la liste des jours fériés tombant dans une semaine (lundi→samedi)
 // sous la forme [{date, nom}, ...]
-function getJoursFeriesDansSemaine(dateDebutSemaine, dateFinSemaine, anneeDepart) {
-    // Les fériés peuvent chevaucher deux années civiles dans une année scolaire
-    const feriesAnnee1 = getJoursFeries(anneeDepart);
-    const feriesAnnee2 = getJoursFeries(anneeDepart + 1);
-    const tousLesFeries = { ...feriesAnnee1, ...feriesAnnee2 };
-
+function getJoursFeriesDansSemaine(dateDebutSemaine, dateFinSemaine) {
     const resultats = [];
     const curseur = new Date(dateDebutSemaine);
     while (curseur <= dateFinSemaine) {
-        const k = `${curseur.getFullYear()}-${String(curseur.getMonth()+1).padStart(2,'0')}-${String(curseur.getDate()).padStart(2,'0')}`;
-        if (tousLesFeries[k]) {
-            resultats.push({ date: new Date(curseur), nom: tousLesFeries[k] });
+        const k = `${curseur.getFullYear()}-${String(curseur.getMonth() + 1).padStart(2, '0')}-${String(curseur.getDate()).padStart(2, '0')}`;
+        if (listeJoursFeriesAPI[k]) {
+            resultats.push({ date: new Date(curseur), nom: listeJoursFeriesAPI[k] });
         }
         curseur.setDate(curseur.getDate() + 1);
     }
     return resultats;
 }
+
 
 function genererTableauSemaines() {
     const tbody = document.getElementById("semainesTableContent");
@@ -356,9 +332,7 @@ function genererTableauSemaines() {
         }
     }
 
-    // Année scolaire pour le calcul des fériés
-    const anneeSelectGTS = document.getElementById("anneeScolaireSelect");
-    const anneeGTS = anneeSelectGTS ? parseInt(anneeSelectGTS.value) : new Date().getFullYear();
+    // Le dictionnaire listeJoursFeriesAPI est déjà chargé par initialiserCalendrierDynamique
     const moisNomsCourt = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
 
     semaines.forEach(sem => {
@@ -366,7 +340,7 @@ function genererTableauSemaines() {
         const tr = document.createElement("tr");
 
         // Détecter les jours fériés dans la semaine
-        const feriesSemaine = getJoursFeriesDansSemaine(sem.dateObjetDebut, sem.dateObjetFin, anneeGTS);
+        const feriesSemaine = getJoursFeriesDansSemaine(sem.dateObjetDebut, sem.dateObjetFin);
         const aDesFeeries = feriesSemaine.length > 0;
 
         // Priorité couleur : vacances (jaune) > férié hors vacances (bleu pâle)

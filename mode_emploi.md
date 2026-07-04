@@ -56,7 +56,7 @@ Cliquez ensuite sur **"Appliquer à toutes les semaines hors vacances"** pour pr
 
 ## Onglet 3 — Tableau des semaines
 
-Cet onglet présente la liste de toutes les semaines de l'année scolaire. Les semaines de **vacances scolaires apparaissent en fond jaune**.
+Cet onglet présente la liste de toutes les semaines de l'année scolaire. Les semaines de **vacances scolaires apparaissent en fond jaune**. Celles comprenant **au moins 1 jour férié apparaissent en fond bleu clair**.
 
 Pour chaque semaine, quatre colonnes sont modifiables :
 
