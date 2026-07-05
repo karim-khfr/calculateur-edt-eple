@@ -493,6 +493,124 @@ function mettreAJourInfoAnneeScolaire() {
 }
 
 // ==========================================
+// VALIDATION DES SAISIES HORAIRES (ONGLET 2)
+// ==========================================
+
+/**
+ * Valide un champ horaire individuel.
+ * Retourne : 'ok' | 'vide' | 'invalide' | 'impossible'
+ * - 'vide'      : champ vide, neutre
+ * - 'ok'        : valeur correcte
+ * - 'invalide'  : format non reconnu (ex: "abc", "13:", "25h30")
+ * - 'impossible': heure > 23 ou minutes > 59
+ */
+function validerFormatHoraire(valeur) {
+    if (!valeur || valeur.trim() === '') return 'vide';
+
+    const str = valeur.trim().replace(',', '.');
+
+    if (str.includes(':')) {
+        const parts = str.split(':');
+        if (parts.length !== 2) return 'invalide';
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (isNaN(h) || isNaN(m) || parts[1].trim() === '') return 'invalide';
+        if (h > 23 || m > 59) return 'impossible';
+        return 'ok';
+    }
+
+    const dec = parseFloat(str);
+    if (!isNaN(dec) && str === String(dec) || /^\d+(\.\d+)?$/.test(str)) {
+        if (dec > 23.99) return 'impossible';
+        return 'ok';
+    }
+
+    return 'invalide';
+}
+
+/**
+ * Applique le style visuel sur un champ selon son état de validation.
+ */
+function appliquerStyleValidation(input, etat) {
+    input.classList.remove('horaire-invalide', 'horaire-attention');
+    if (etat === 'invalide' || etat === 'impossible') {
+        input.classList.add('horaire-invalide');
+    } else if (etat === 'attention') {
+        input.classList.add('horaire-attention');
+    }
+}
+
+/**
+ * Valide l'ensemble du tableau onglet 2 et affiche les erreurs.
+ * Appelé par calculerTotalHebdo après chaque saisie.
+ */
+function validerTableauHoraires() {
+    const msgEl = document.getElementById('validation-message-horaires');
+    const erreurs = [];
+    const avertissements = [];
+
+    document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
+        const jour = row.cells[0]?.textContent.trim() || '';
+        const dm = row.querySelector('.debut-matin');
+        const fm = row.querySelector('.fin-matin');
+        const da = row.querySelector('.debut-apm');
+        const fa = row.querySelector('.fin-apm');
+
+        // Valider le format de chaque champ
+        [dm, fm, da, fa].forEach(input => {
+            const etat = validerFormatHoraire(input.value);
+            if (etat === 'invalide') {
+                appliquerStyleValidation(input, 'invalide');
+                erreurs.push(`${jour} : "${input.value}" n'est pas un horaire valide (attendu HH:MM).`);
+            } else if (etat === 'impossible') {
+                appliquerStyleValidation(input, 'invalide');
+                erreurs.push(`${jour} : "${input.value}" dépasse les limites horaires (max 23:59).`);
+            } else {
+                appliquerStyleValidation(input, 'ok');
+            }
+        });
+
+        // Vérifier fin > début pour le matin
+        const tDm = parseHoraire(dm.value);
+        const tFm = parseHoraire(fm.value);
+        if (tDm !== null && tFm !== null && tFm <= tDm) {
+            appliquerStyleValidation(dm, 'attention');
+            appliquerStyleValidation(fm, 'attention');
+            avertissements.push(`${jour} matin : l'heure de fin doit être après l'heure de début.`);
+        }
+
+        // Vérifier fin > début pour l'après-midi
+        const tDa = parseHoraire(da.value);
+        const tFa = parseHoraire(fa.value);
+        if (tDa !== null && tFa !== null && tFa <= tDa) {
+            appliquerStyleValidation(da, 'attention');
+            appliquerStyleValidation(fa, 'attention');
+            avertissements.push(`${jour} APM : l'heure de fin doit être après l'heure de début.`);
+        }
+
+        // Vérifier que l'APM ne commence pas avant la fin du matin
+        if (tFm !== null && tDa !== null && tDa < tFm) {
+            appliquerStyleValidation(da, 'attention');
+            avertissements.push(`${jour} : le début APM (${da.value}) est avant la fin du matin (${fm.value}).`);
+        }
+    });
+
+    // Afficher le premier message le plus important
+    if (msgEl) {
+        if (erreurs.length > 0) {
+            msgEl.textContent = '⛔ ' + erreurs[0];
+            msgEl.className = '';
+        } else if (avertissements.length > 0) {
+            msgEl.textContent = '⚠️ ' + avertissements[0];
+            msgEl.className = 'attention';
+        } else {
+            msgEl.textContent = '';
+            msgEl.className = '';
+        }
+    }
+}
+
+// ==========================================
 // CALCULS DES HORAIRES HEBDOMADAIRES (ONGLET 2)
 // ==========================================
 function parseHoraire(str) {
@@ -551,6 +669,7 @@ function calculerTotalHebdo() {
     totalMinutesGeneral += (nbPauses * 20);
 
     document.getElementById('totalHebdo').textContent = formatMinutes(totalMinutesGeneral);
+    validerTableauHoraires();
     sauvegarderTout();
 }
 

@@ -356,7 +356,9 @@
                         </tbody>
                     </table>
 
-                    <div style="margin: 10px 0;">
+                    <div id="validation-message-horaires" role="alert" aria-live="polite"></div>
+
+<div style="margin: 10px 0;">
                         <label for="nbPauses">Nombre de pauses de 20 minutes à inclure dans le temps de travail effectif :</label>
                         <input type="number" id="nbPauses" min="0" value="0" style="width:80px; display:inline-block; margin-left:10px;" oninput="calculerTotalHebdo()">
                     </div>
