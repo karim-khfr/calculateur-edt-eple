@@ -441,3 +441,120 @@ button:hover {
     }
 
 }
+/* ==========================================================
+   TOASTS & MODALE DE CONFIRMATION
+========================================================== */
+
+/* Conteneur des toasts — coin bas droit */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 260px;
+    max-width: 380px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    font-size: 0.92em;
+    font-family: Arial, sans-serif;
+    color: #fff;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateX(30px);
+    animation: toastEntree 0.3s ease forwards, toastSortie 0.3s ease forwards;
+    animation-delay: 0s, var(--toast-duree, 3s);
+}
+
+.toast.succes  { background: #27ae60; }
+.toast.info    { background: #3498db; }
+.toast.erreur  { background: #e74c3c; }
+
+.toast-icone { font-size: 1.2em; flex-shrink: 0; }
+
+@keyframes toastEntree {
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastSortie {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(30px); }
+}
+
+/* Modale de confirmation */
+#modale-confirm {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+}
+
+#modale-confirm.cache { display: none; }
+
+#modale-confirm-boite {
+    background: #fff;
+    border-radius: 8px;
+    padding: 28px 24px 20px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+    text-align: center;
+}
+
+#modale-confirm-boite p {
+    margin: 0 0 20px;
+    font-size: 1em;
+    color: #333;
+    line-height: 1.5;
+}
+
+#modale-confirm-boite .confirm-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+#modale-confirm-boite .btn-annuler {
+    background: #aaa;
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95em;
+    width: auto;
+    margin: 0;
+}
+
+#modale-confirm-boite .btn-confirmer {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: bold;
+    width: auto;
+    margin: 0;
+}
+
+#modale-confirm-boite .btn-annuler:hover  { background: #888; }
+#modale-confirm-boite .btn-confirmer:hover { background: #c0392b; }
+
+@media (max-width: 480px) {
+    #toast-container { bottom: 12px; right: 12px; left: 12px; }
+    .toast { min-width: unset; max-width: unset; }
+}

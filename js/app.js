@@ -1,4 +1,55 @@
 // ==========================================
+// TOASTS & MODALE DE CONFIRMATION
+// ==========================================
+
+/**
+ * Affiche un toast non bloquant.
+ * @param {string} message  - Texte à afficher
+ * @param {'succes'|'info'|'erreur'} type - Type visuel
+ * @param {number} duree    - Durée en ms avant disparition (défaut 3500)
+ */
+function afficherToast(message, type = 'info', duree = 3500) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const icones = { succes: '✅', info: 'ℹ️', erreur: '❌' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.style.setProperty('--toast-duree', `${duree / 1000}s`);
+    toast.innerHTML = `<span class="toast-icone">${icones[type] || 'ℹ️'}</span><span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Supprimer le toast après la fin de l'animation de sortie
+    setTimeout(() => toast.remove(), duree + 400);
+}
+
+/**
+ * Remplace confirm() par une modale non bloquante.
+ * Retourne une Promise<boolean> : true si confirmé, false si annulé.
+ * @param {string} message - Texte de la question
+ * @param {string} labelOk - Libellé du bouton de confirmation (défaut "Confirmer")
+ */
+let _resolveConfirm = null;
+function confirmerAsync(message, labelOk = 'Confirmer') {
+    return new Promise(resolve => {
+        _resolveConfirm = resolve;
+        const modale = document.getElementById('modale-confirm');
+        document.getElementById('modale-confirm-texte').textContent = message;
+        document.getElementById('modale-confirm-ok').textContent = labelOk;
+        modale.classList.remove('cache');
+    });
+}
+
+function confirmerReponse(reponse) {
+    const modale = document.getElementById('modale-confirm');
+    modale.classList.add('cache');
+    if (_resolveConfirm) {
+        _resolveConfirm(reponse);
+        _resolveConfirm = null;
+    }
+}
+
+// ==========================================
 // GESTION DES ONGLETS
 // ==========================================
 function changerOnglet(event, ongletId) {
@@ -514,7 +565,7 @@ function copierTotalHebdo() {
     if (cible) {
         cible.value = decimal.toFixed(2);
         sauvegarderTout();
-        alert(`Valeur copiée avec succès : ${decimal.toFixed(2)}h`);
+        afficherToast(`Valeur copiée : ${decimal.toFixed(2)}h`, 'succes');
     }
 }
 
@@ -522,7 +573,7 @@ function appliquerHorairesHorsVacances() {
     genererTableauSemaines();
     calculerResultats();
     sauvegarderImmediatement();
-    alert("Les horaires types ont été appliqués sur l'ensemble des semaines scolaires.");
+    afficherToast("Horaires appliqués à toutes les semaines scolaires.", 'succes');
 }
 
 // ==========================================
@@ -1142,20 +1193,27 @@ function resetHorairesHebdo() {
     sauvegarderImmediatement();
 }
 
-function resetTableauAnnuel() {
-    if (confirm("Voulez-vous réinitialiser toutes les saisies manuelles des semaines ?")) {
-        tableauSemainesData = {};
-        genererTableauSemaines();
-        calculerResultats();
-        sauvegarderImmediatement();
-    }
+async function resetTableauAnnuel() {
+    const ok = await confirmerAsync(
+        "Voulez-vous réinitialiser toutes les saisies manuelles des semaines ?",
+        "Réinitialiser"
+    );
+    if (!ok) return;
+    tableauSemainesData = {};
+    genererTableauSemaines();
+    calculerResultats();
+    sauvegarderImmediatement();
+    afficherToast("Tableau annuel réinitialisé.", 'info');
 }
 
-function resetApplication() {
-    if (confirm("Tout effacer et recommencer à zéro ?")) {
-        localStorage.removeItem('eple_calculateur');
-        window.location.reload();
-    }
+async function resetApplication() {
+    const ok = await confirmerAsync(
+        "Tout effacer et recommencer à zéro ? Cette action est irréversible.",
+        "Tout effacer"
+    );
+    if (!ok) return;
+    localStorage.removeItem('eple_calculateur');
+    window.location.reload();
 }
 
 // ==========================================
@@ -1226,7 +1284,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                         contactForm.reset();
                     } else {
-                        alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+                        afficherToast("Une erreur est survenue lors de l'envoi. Veuillez réessayer.", 'erreur', 5000);
                     }
                 })
                 .catch(error => {
@@ -1236,7 +1294,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     btnSubmit.style.opacity = "1";
                     btnSubmit.style.cursor = "pointer";
                     console.error("Erreur de liaison :", error);
-                    alert("Impossible de joindre le serveur. Vérifiez votre connexion internet.");
+                    afficherToast("Impossible de joindre le serveur. Vérifiez votre connexion internet.", 'erreur', 5000);
                 });
         });
     }
