@@ -14,6 +14,9 @@
         integrity="sha384-UFvZBDnJ4PAYKb7VYwq105qNLT/F1oZzrmAmuOH2bBML35uj8CsDA2gZNKfdXIbD"
         crossorigin="anonymous"
         referrerpolicy="no-referrer"></script>
+    <!-- SheetJS pour l'export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div class="container">
@@ -438,7 +441,9 @@
             <div class="section">
                 <h2>Export des données</h2>
                 <div class="export-buttons">
-                    <button onclick="exporterPDF()">📄 Exporter en PDF</button>
+                    <button onclick="exporterPDF()">📄 Exporter le bilan en PDF</button>
+                    <button onclick="exporterHorairesPDF()">🗓 Exporter les horaires en PDF</button>
+                    <button onclick="exporterExcel()">📊 Exporter en Excel</button>
                     <button onclick="resetApplication()" style="background:#e74c3c; color: white;">🗑 Nouveau calcul</button>
                 </div>
             </div>
