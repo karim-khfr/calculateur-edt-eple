@@ -594,3 +594,91 @@ button:hover {
 #validation-message-horaires:empty {
     display: none;
 }
+
+/* ==========================================================
+   INDICATEUR DE PROGRESSION (ONGLET 4)
+========================================================== */
+
+.progression-wrapper {
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.progression-wrapper h3 {
+    margin: 0 0 12px 0;
+    font-size: 1em;
+    color: #2c3e50;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Ligne barre + pourcentage + badge dépassement */
+.progression-ligne {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.progression-barre-fond {
+    flex: 1;
+    height: 22px;
+    background: #e9ecef;
+    border-radius: 11px;
+    overflow: hidden;
+}
+
+.progression-barre-remplissage {
+    height: 100%;
+    border-radius: 11px;
+    transition: width 0.5s ease, background-color 0.4s ease;
+    min-width: 2px;
+}
+
+/* États de couleur */
+.progression-barre-remplissage.bleue   { background: #3498db; }
+.progression-barre-remplissage.orange  { background: #f39c12; }
+.progression-barre-remplissage.verte   { background: #27ae60; }
+.progression-barre-remplissage.rouge   { background: #e74c3c; }
+
+.progression-pct {
+    font-size: 1em;
+    font-weight: bold;
+    min-width: 48px;
+    text-align: right;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+.progression-badge {
+    font-size: 0.85em;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.progression-badge.atteint    { background: #d5f5e3; color: #1e8449; }
+.progression-badge.depasse    { background: #fadbd8; color: #c0392b; }
+.progression-badge.approche   { background: #fdebd0; color: #d35400; }
+
+/* Ligne de chiffres clés */
+.progression-detail {
+    font-size: 0.9em;
+    color: #555;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+}
+
+.progression-detail span {
+    white-space: nowrap;
+}
+
+.progression-detail strong {
+    color: #2c3e50;
+}

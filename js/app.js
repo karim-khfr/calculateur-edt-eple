@@ -794,6 +794,87 @@ function calculerResultats() {
         elEcart.textContent = "- " + formatResultatHeures(Math.abs(ecart));
         elEcart.style.color = "red";
     }
+
+    // Mettre à jour l'indicateur de progression
+    mettreAJourProgression(totalGeneral, referenceAnnuelle);
+}
+
+// ==========================================
+// INDICATEUR DE PROGRESSION (ONGLET 4)
+// ==========================================
+function mettreAJourProgression(totalHeures, referenceHeures) {
+    const remplissage = document.getElementById('progression-remplissage');
+    const pct         = document.getElementById('progression-pct');
+    const badge       = document.getElementById('progression-badge');
+    const realise     = document.getElementById('prog-realise');
+    const objectif    = document.getElementById('prog-objectif');
+    const resteWrap   = document.getElementById('prog-reste-wrap');
+    const reste       = document.getElementById('prog-reste');
+    if (!remplissage || !pct) return;
+
+    // Seuil d'approche : 5 heures avant l'objectif
+    const SEUIL_APPROCHE_H = 5;
+
+    const pourcentage  = referenceHeures > 0
+        ? Math.min(100, (totalHeures / referenceHeures) * 100)
+        : 0;
+    const ecartH       = totalHeures - referenceHeures;
+    const depasse      = ecartH > 0;
+    const atteint      = Math.abs(ecartH) < 0.01; // tolérance 1 minute
+    const approche     = !depasse && !atteint && (referenceHeures - totalHeures) <= SEUIL_APPROCHE_H;
+
+    // Largeur de la barre
+    remplissage.style.width = pourcentage.toFixed(1) + '%';
+
+    // Couleur de la barre
+    remplissage.className = 'progression-barre-remplissage ' + (
+        depasse  ? 'rouge'  :
+        atteint  ? 'verte'  :
+        approche ? 'orange' :
+                   'bleue'
+    );
+
+    // Attribut aria
+    remplissage.closest('[role="progressbar"]')
+        ?.setAttribute('aria-valuenow', Math.round(pourcentage));
+
+    // Pourcentage texte
+    pct.textContent = Math.round(pourcentage) + ' %';
+    pct.style.color = depasse ? '#c0392b' : atteint ? '#1e8449' : '#2c3e50';
+
+    // Badge
+    badge.style.display = '';
+    if (depasse) {
+        badge.textContent = `⚠️ Dépassement`;
+        badge.className = 'progression-badge depasse';
+    } else if (atteint) {
+        badge.textContent = '✅ Objectif atteint';
+        badge.className = 'progression-badge atteint';
+    } else if (approche) {
+        badge.textContent = '⚡ Objectif proche';
+        badge.className = 'progression-badge approche';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    // Ligne de détail
+    const fmtH = (h) => {
+        const entier = Math.floor(Math.abs(h));
+        const min    = Math.round((Math.abs(h) - entier) * 60);
+        return `${entier}h ${String(min).padStart(2, '0')}`;
+    };
+
+    realise.textContent  = fmtH(totalHeures);
+    objectif.textContent = fmtH(referenceHeures);
+
+    if (depasse) {
+        resteWrap.innerHTML = `Excédent : <strong style="color:#c0392b">+ ${fmtH(ecartH)}</strong>`;
+    } else if (atteint) {
+        resteWrap.innerHTML = `<strong style="color:#1e8449">Objectif atteint ✓</strong>`;
+    } else {
+        reste.textContent = fmtH(referenceHeures - totalHeures);
+        resteWrap.innerHTML = `Reste : <strong id="prog-reste">${fmtH(referenceHeures - totalHeures)}</strong>`;
+    }
 }
 
 // ==========================================
