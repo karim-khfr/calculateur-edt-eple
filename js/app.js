@@ -1217,8 +1217,195 @@ async function resetApplication() {
 }
 
 // ==========================================
-// DEMARRAGE AUTOMATIQUE
+// EXPORT PDF HORAIRES HEBDOMADAIRES
 // ==========================================
+
+function exporterHorairesPDF() {
+    const { jsPDF } = window.jspdf;
+    // Paysage (landscape)
+    const doc = new jsPDF('l', 'mm', 'a4');
+
+    const bleuPrimaire = [0, 0, 145];
+    const grisTexte    = [60, 60, 60];
+    const grisLeger    = [200, 200, 200];
+    const pageW = doc.internal.pageSize.width;  // 297mm en paysage
+    const pageH = doc.internal.pageSize.height; // 210mm en paysage
+    const mL = 14, mR = 14;
+
+    // Identité
+    const nom    = (document.getElementById("nomAgent")?.value    || "Agent").toUpperCase();
+    const prenom =  document.getElementById("prenomAgent")?.value || "";
+    const quotiteEl = document.getElementById("quotiteSelect");
+    const quotite   = quotiteEl ? quotiteEl.value + " %" : "100 %";
+
+    // ── EN-TÊTE ─────────────────────────────────────────────
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
+    doc.text("HORAIRES HEBDOMADAIRES — SEMAINE TYPE", mL, 20);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
+    doc.text(`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}`, mL, 29);
+
+    doc.setDrawColor(grisLeger[0], grisLeger[1], grisLeger[2]);
+    doc.setLineWidth(0.5);
+    doc.line(mL, 33, pageW - mR, 33);
+
+    // ── TABLEAU DES JOURS ───────────────────────────────────
+    const joursRows = [];
+    document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
+        const jour  = row.cells[0]?.textContent.trim() || "";
+        const dm    = row.querySelector('.debut-matin')?.value  || "—";
+        const fm    = row.querySelector('.fin-matin')?.value    || "—";
+        const hm    = row.querySelector('.heures-matin')?.textContent.trim() || "—";
+        const da    = row.querySelector('.debut-apm')?.value    || "—";
+        const fa    = row.querySelector('.fin-apm')?.value      || "—";
+        const ha    = row.querySelector('.heures-apm')?.textContent.trim()   || "—";
+        const total = row.querySelector('.total-jour')?.textContent.trim()   || "—";
+        joursRows.push([jour, `${dm} – ${fm}`, hm, `${da} – ${fa}`, ha, total]);
+    });
+
+    doc.autoTable({
+        startY: 39,
+        margin: { left: mL, right: mR },
+        head: [['Jour', 'Début matin', 'Fin matin', 'H matin', 'Début APM', 'Fin APM', 'H APM', 'Total journalier']],
+        body: joursRows.map(r => {
+            // Séparer les colonnes fusionnées "dm – fm" pour plus de lisibilité en paysage
+            const [jour, matinRange, hm, apmRange, ha, total] = r;
+            const [dm, fm] = matinRange.split(' – ');
+            const [da, fa] = apmRange.split(' – ');
+            return [jour, dm, fm, hm, da, fa, ha, total];
+        }),
+        theme: 'striped',
+        headStyles: {
+            fillColor: bleuPrimaire,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 11,
+            halign: 'center'
+        },
+        styles: { fontSize: 11, cellPadding: 5, halign: 'center' },
+        columnStyles: {
+            0: { fontStyle: 'bold', halign: 'left', cellWidth: 28 },
+            1: { cellWidth: 28 },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 24 },
+            4: { cellWidth: 28 },
+            5: { cellWidth: 28 },
+            6: { cellWidth: 24 },
+            7: { fontStyle: 'bold', cellWidth: 32 }
+        }
+    });
+
+    doc.save(`Horaires_${nom}_${prenom}.pdf`);
+}
+
+// ==========================================
+// EXPORT EXCEL
+// ==========================================
+
+function exporterExcel() {
+    if (typeof XLSX === 'undefined') {
+        afficherToast("La bibliothèque Excel n'est pas disponible. Vérifiez votre connexion.", 'erreur', 5000);
+        return;
+    }
+
+    const nom    = (document.getElementById("nomAgent")?.value    || "Agent").toUpperCase();
+    const prenom =  document.getElementById("prenomAgent")?.value || "";
+    const quotiteEl   = document.getElementById("quotiteSelect");
+    const quotite     = quotiteEl ? quotiteEl.value + " %" : "100 %";
+    const heuresRefEl = document.getElementById("heuresMaxInput");
+    const heuresRef   = heuresRefEl ? heuresRefEl.value : "";
+    const anneeEl     = document.getElementById("anneeScolaireSelect");
+    const anneeLabel  = anneeEl ? anneeEl.options[anneeEl.selectedIndex]?.text || "" : "";
+
+    const wb = XLSX.utils.book_new();
+
+    // ── FEUILLE 1 : TABLEAU DES SEMAINES ────────────────────
+    const entetesSemaines = ["Semaine", "Du", "Au", "Type", "Heures", "H. Sup", "H. Récup", "Commentaire"];
+    const lignesSemaines  = [
+        [`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}   |   Référence : ${heuresRef}   |   Année : ${anneeLabel}`],
+        [],
+        entetesSemaines
+    ];
+
+    document.querySelectorAll('#semainesTableContent tr').forEach(row => {
+        const cellSemaine  = row.querySelector('td:nth-child(1)');
+        const cellType     = row.querySelector('td:nth-child(2)');
+        const inputHeures  = row.querySelector('.s-heures');
+        const inputSup     = row.querySelector('.s-heures-sup');
+        const inputRecup   = row.querySelector('.s-heures-recup');
+        const inputComm    = row.querySelector('.s-comm');
+        if (!cellSemaine) return;
+
+        // Extraire numéro et dates depuis la cellule "Semaine"
+        const textes = cellSemaine.innerText.split('\n').map(s => s.trim()).filter(Boolean);
+        const numSem = textes[0] || "";  // "Semaine 36"
+        const dates  = textes[1] || "";  // "du 31/08/2026 au 06/09/2026"
+        const matchDates = dates.match(/(\d{2}\/\d{2}\/\d{4})/g) || [];
+        const dateDebut  = matchDates[0] || "";
+        const dateFin    = matchDates[1] || "";
+
+        lignesSemaines.push([
+            numSem,
+            dateDebut,
+            dateFin,
+            cellType?.textContent.trim()     || "",
+            inputHeures?.value               || "",
+            inputSup?.value                  || "",
+            inputRecup?.value                || "",
+            inputComm?.value                 || ""
+        ]);
+    });
+
+    const wsSemaines = XLSX.utils.aoa_to_sheet(lignesSemaines);
+
+    // Largeurs de colonnes
+    wsSemaines['!cols'] = [
+        { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 10 },
+        { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 35 }
+    ];
+
+    // Fusion de la cellule d'en-tête agent sur toute la largeur
+    wsSemaines['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+    XLSX.utils.book_append_sheet(wb, wsSemaines, "Tableau des semaines");
+
+    // ── FEUILLE 2 : RÉSULTATS ───────────────────────────────
+    const val = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return "";
+        return el.textContent.trim().split('(')[0].trim();
+    };
+
+    const lignesResultats = [
+        [`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}   |   Année : ${anneeLabel}`],
+        [],
+        ["Indicateur", "Valeur"],
+        ["Heures effectuées hors vacances scolaires",  val("resScolaire")],
+        ["Heures effectuées pendant les vacances",     val("resVacances")],
+        ["Heures supplémentaires comptabilisées",      val("resSup")],
+        ["Heures récupérées / déduites",               val("resRecup")],
+        ["TOTAL GÉNÉRAL RÉALISÉ",                      val("resTotal")],
+        ["Volume annuel de référence obligatoire",     val("resReference")],
+        ["Écart (Balance annuelle)",                   val("resEcart")]
+    ];
+
+    const wsResultats = XLSX.utils.aoa_to_sheet(lignesResultats);
+    wsResultats['!cols'] = [{ wch: 48 }, { wch: 16 }];
+    wsResultats['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+
+    XLSX.utils.book_append_sheet(wb, wsResultats, "Résultats");
+
+    // ── TÉLÉCHARGEMENT ──────────────────────────────────────
+    const nomFichier = `Bilan_EPLE_${nom}_${prenom}_${anneeLabel.replace('-', '_')}.xlsx`;
+    XLSX.writeFile(wb, nomFichier);
+    afficherToast("Fichier Excel exporté avec succès.", 'succes');
+}
+
+
 window.onload = async function () {
     // 1. Générer les options d'années scolaires dynamiquement
     genererOptionsAnneeScolaire();
