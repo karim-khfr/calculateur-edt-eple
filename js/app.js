@@ -194,7 +194,7 @@ function genererOptionsAnneeScolaire() {
     try {
         const saved = JSON.parse(localStorage.getItem('eple_calculateur') || '{}');
         if (saved['anneeScolaireSelect']) anneeSauvegardee = parseInt(saved['anneeScolaireSelect']);
-    } catch(e) {}
+    } catch (e) { }
 
     select.innerHTML = '';
 
@@ -384,7 +384,7 @@ function genererTableauSemaines() {
     }
 
     // Le dictionnaire listeJoursFeriesAPI est déjà chargé par initialiserCalendrierDynamique
-    const moisNomsCourt = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+    const moisNomsCourt = ['jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc'];
 
     semaines.forEach(sem => {
         const vacInfo = estEnVacances(sem.dateObjetDebut, sem.dateObjetFin);
@@ -425,8 +425,8 @@ function genererTableauSemaines() {
                 <strong>Semaine ${sem.num}</strong><br>
                 <small style="color:#555;">du ${sem.debut} au ${sem.fin}</small>
                 ${aDesFeeries && !vacInfo.enVacances
-                    ? `<br><small style="color:#2980b9; font-style:italic;">🔵 ${nomsFeries}</small>`
-                    : ''}
+                ? `<br><small style="color:#2980b9; font-style:italic;">🔵 ${nomsFeries}</small>`
+                : ''}
             </td>
             <td><span class="badge" style="background:${vacInfo.enVacances ? '#f39c12' : '#27ae60'}; color:#fff; padding:3px 6px; border-radius:3px; font-size:11px;">${vacInfo.enVacances ? 'Vacances' : 'Scolaire'}</span></td>
             <td><input type="text" class="s-heures" data-key="${attrSafe(key)}" value="${attrSafe(affichageHeures)}" placeholder="35:00" maxlength="5" oninput="sauvegarderSemaineEnLigne(this)"></td>
@@ -804,34 +804,34 @@ function calculerResultats() {
 // ==========================================
 function mettreAJourProgression(totalHeures, referenceHeures) {
     const remplissage = document.getElementById('progression-remplissage');
-    const pct         = document.getElementById('progression-pct');
-    const badge       = document.getElementById('progression-badge');
-    const realise     = document.getElementById('prog-realise');
-    const objectif    = document.getElementById('prog-objectif');
-    const resteWrap   = document.getElementById('prog-reste-wrap');
-    const reste       = document.getElementById('prog-reste');
+    const pct = document.getElementById('progression-pct');
+    const badge = document.getElementById('progression-badge');
+    const realise = document.getElementById('prog-realise');
+    const objectif = document.getElementById('prog-objectif');
+    const resteWrap = document.getElementById('prog-reste-wrap');
+    const reste = document.getElementById('prog-reste');
     if (!remplissage || !pct) return;
 
     // Seuil d'approche : 5 heures avant l'objectif
     const SEUIL_APPROCHE_H = 5;
 
-    const pourcentage  = referenceHeures > 0
+    const pourcentage = referenceHeures > 0
         ? Math.min(100, (totalHeures / referenceHeures) * 100)
         : 0;
-    const ecartH       = totalHeures - referenceHeures;
-    const depasse      = ecartH > 0;
-    const atteint      = Math.abs(ecartH) < 0.01; // tolérance 1 minute
-    const approche     = !depasse && !atteint && (referenceHeures - totalHeures) <= SEUIL_APPROCHE_H;
+    const ecartH = totalHeures - referenceHeures;
+    const depasse = ecartH > 0;
+    const atteint = Math.abs(ecartH) < 0.01; // tolérance 1 minute
+    const approche = !depasse && !atteint && (referenceHeures - totalHeures) <= SEUIL_APPROCHE_H;
 
     // Largeur de la barre
     remplissage.style.width = pourcentage.toFixed(1) + '%';
 
     // Couleur de la barre
     remplissage.className = 'progression-barre-remplissage ' + (
-        depasse  ? 'rouge'  :
-        atteint  ? 'verte'  :
-        approche ? 'orange' :
-                   'bleue'
+        depasse ? 'rouge' :
+            atteint ? 'verte' :
+                approche ? 'orange' :
+                    'bleue'
     );
 
     // Attribut aria
@@ -860,11 +860,11 @@ function mettreAJourProgression(totalHeures, referenceHeures) {
     // Ligne de détail
     const fmtH = (h) => {
         const entier = Math.floor(Math.abs(h));
-        const min    = Math.round((Math.abs(h) - entier) * 60);
+        const min = Math.round((Math.abs(h) - entier) * 60);
         return `${entier}h ${String(min).padStart(2, '0')}`;
     };
 
-    realise.textContent  = fmtH(totalHeures);
+    realise.textContent = fmtH(totalHeures);
     objectif.textContent = fmtH(referenceHeures);
 
     if (depasse) {
@@ -1426,17 +1426,17 @@ function exporterHorairesPDF() {
     const doc = new jsPDF('l', 'mm', 'a4');
 
     const bleuPrimaire = [0, 0, 145];
-    const grisTexte    = [60, 60, 60];
-    const grisLeger    = [200, 200, 200];
+    const grisTexte = [60, 60, 60];
+    const grisLeger = [200, 200, 200];
     const pageW = doc.internal.pageSize.width;  // 297mm en paysage
     const pageH = doc.internal.pageSize.height; // 210mm en paysage
     const mL = 14, mR = 14;
 
     // Identité
-    const nom    = (document.getElementById("nomAgent")?.value    || "Agent").toUpperCase();
-    const prenom =  document.getElementById("prenomAgent")?.value || "";
+    const nom = (document.getElementById("nomAgent")?.value || "Agent").toUpperCase();
+    const prenom = document.getElementById("prenomAgent")?.value || "";
     const quotiteEl = document.getElementById("quotiteSelect");
-    const quotite   = quotiteEl ? quotiteEl.value + " %" : "100 %";
+    const quotite = quotiteEl ? quotiteEl.value + " %" : "100 %";
 
     // ── EN-TÊTE ─────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
@@ -1456,14 +1456,14 @@ function exporterHorairesPDF() {
     // ── TABLEAU DES JOURS ───────────────────────────────────
     const joursRows = [];
     document.querySelectorAll('#heuresTable tbody tr').forEach(row => {
-        const jour  = row.cells[0]?.textContent.trim() || "";
-        const dm    = row.querySelector('.debut-matin')?.value  || "—";
-        const fm    = row.querySelector('.fin-matin')?.value    || "—";
-        const hm    = row.querySelector('.heures-matin')?.textContent.trim() || "—";
-        const da    = row.querySelector('.debut-apm')?.value    || "—";
-        const fa    = row.querySelector('.fin-apm')?.value      || "—";
-        const ha    = row.querySelector('.heures-apm')?.textContent.trim()   || "—";
-        const total = row.querySelector('.total-jour')?.textContent.trim()   || "—";
+        const jour = row.cells[0]?.textContent.trim() || "";
+        const dm = row.querySelector('.debut-matin')?.value || "—";
+        const fm = row.querySelector('.fin-matin')?.value || "—";
+        const hm = row.querySelector('.heures-matin')?.textContent.trim() || "—";
+        const da = row.querySelector('.debut-apm')?.value || "—";
+        const fa = row.querySelector('.fin-apm')?.value || "—";
+        const ha = row.querySelector('.heures-apm')?.textContent.trim() || "—";
+        const total = row.querySelector('.total-jour')?.textContent.trim() || "—";
         joursRows.push([jour, `${dm} – ${fm}`, hm, `${da} – ${fa}`, ha, total]);
     });
 
@@ -1512,51 +1512,51 @@ function exporterExcel() {
         return;
     }
 
-    const nom    = (document.getElementById("nomAgent")?.value    || "Agent").toUpperCase();
-    const prenom =  document.getElementById("prenomAgent")?.value || "";
-    const quotiteEl   = document.getElementById("quotiteSelect");
-    const quotite     = quotiteEl ? quotiteEl.value + " %" : "100 %";
+    const nom = (document.getElementById("nomAgent")?.value || "Agent").toUpperCase();
+    const prenom = document.getElementById("prenomAgent")?.value || "";
+    const quotiteEl = document.getElementById("quotiteSelect");
+    const quotite = quotiteEl ? quotiteEl.value + " %" : "100 %";
     const heuresRefEl = document.getElementById("heuresMaxInput");
-    const heuresRef   = heuresRefEl ? heuresRefEl.value : "";
-    const anneeEl     = document.getElementById("anneeScolaireSelect");
-    const anneeLabel  = anneeEl ? anneeEl.options[anneeEl.selectedIndex]?.text || "" : "";
+    const heuresRef = heuresRefEl ? heuresRefEl.value : "";
+    const anneeEl = document.getElementById("anneeScolaireSelect");
+    const anneeLabel = anneeEl ? anneeEl.options[anneeEl.selectedIndex]?.text || "" : "";
 
     const wb = XLSX.utils.book_new();
 
     // ── FEUILLE 1 : TABLEAU DES SEMAINES ────────────────────
     const entetesSemaines = ["Semaine", "Du", "Au", "Type", "Heures", "H. Sup", "H. Récup", "Commentaire"];
-    const lignesSemaines  = [
+    const lignesSemaines = [
         [`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}   |   Référence : ${heuresRef}   |   Année : ${anneeLabel}`],
         [],
         entetesSemaines
     ];
 
     document.querySelectorAll('#semainesTableContent tr').forEach(row => {
-        const cellSemaine  = row.querySelector('td:nth-child(1)');
-        const cellType     = row.querySelector('td:nth-child(2)');
-        const inputHeures  = row.querySelector('.s-heures');
-        const inputSup     = row.querySelector('.s-heures-sup');
-        const inputRecup   = row.querySelector('.s-heures-recup');
-        const inputComm    = row.querySelector('.s-comm');
+        const cellSemaine = row.querySelector('td:nth-child(1)');
+        const cellType = row.querySelector('td:nth-child(2)');
+        const inputHeures = row.querySelector('.s-heures');
+        const inputSup = row.querySelector('.s-heures-sup');
+        const inputRecup = row.querySelector('.s-heures-recup');
+        const inputComm = row.querySelector('.s-comm');
         if (!cellSemaine) return;
 
         // Extraire numéro et dates depuis la cellule "Semaine"
         const textes = cellSemaine.innerText.split('\n').map(s => s.trim()).filter(Boolean);
         const numSem = textes[0] || "";  // "Semaine 36"
-        const dates  = textes[1] || "";  // "du 31/08/2026 au 06/09/2026"
+        const dates = textes[1] || "";  // "du 31/08/2026 au 06/09/2026"
         const matchDates = dates.match(/(\d{2}\/\d{2}\/\d{4})/g) || [];
-        const dateDebut  = matchDates[0] || "";
-        const dateFin    = matchDates[1] || "";
+        const dateDebut = matchDates[0] || "";
+        const dateFin = matchDates[1] || "";
 
         lignesSemaines.push([
             numSem,
             dateDebut,
             dateFin,
-            cellType?.textContent.trim()     || "",
-            inputHeures?.value               || "",
-            inputSup?.value                  || "",
-            inputRecup?.value                || "",
-            inputComm?.value                 || ""
+            cellType?.textContent.trim() || "",
+            inputHeures?.value || "",
+            inputSup?.value || "",
+            inputRecup?.value || "",
+            inputComm?.value || ""
         ]);
     });
 
@@ -1584,13 +1584,13 @@ function exporterExcel() {
         [`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}   |   Année : ${anneeLabel}`],
         [],
         ["Indicateur", "Valeur"],
-        ["Heures effectuées hors vacances scolaires",  val("resScolaire")],
-        ["Heures effectuées pendant les vacances",     val("resVacances")],
-        ["Heures supplémentaires comptabilisées",      val("resSup")],
-        ["Heures récupérées / déduites",               val("resRecup")],
-        ["TOTAL GÉNÉRAL RÉALISÉ",                      val("resTotal")],
-        ["Volume annuel de référence obligatoire",     val("resReference")],
-        ["Écart (Balance annuelle)",                   val("resEcart")]
+        ["Heures effectuées hors vacances scolaires", val("resScolaire")],
+        ["Heures effectuées pendant les vacances", val("resVacances")],
+        ["Heures supplémentaires comptabilisées", val("resSup")],
+        ["Heures récupérées / déduites", val("resRecup")],
+        ["TOTAL GÉNÉRAL RÉALISÉ", val("resTotal")],
+        ["Volume annuel de référence obligatoire", val("resReference")],
+        ["Écart (Balance annuelle)", val("resEcart")]
     ];
 
     const wsResultats = XLSX.utils.aoa_to_sheet(lignesResultats);
@@ -1686,3 +1686,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+// ==========================================
+// RÉINITIALISATION GLOBALE DE L'APPLICATION
+// ==========================================
+async function resetApplication() {
+    // Utilisation de votre modale de confirmation personnalisée
+    const confirmation = await confirmerAsync(
+        "Voulez-vous vraiment réinitialiser complètement l'outil ? Toutes vos données saisies seront définitivement effacées.",
+        "Effacer tout"
+    );
+
+    if (confirmation) {
+        // Supprime la sauvegarde du calculateur
+        localStorage.removeItem('eple_calculateur');
+        // Affiche un toast de succès (optionnel avant rechargement)
+        afficherToast("Application réinitialisée. Rechargement...", "succes");
+        // Recharge la page proprement pour remettre tous les champs à zéro
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }
+}
