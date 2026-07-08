@@ -1432,22 +1432,32 @@ function exporterHorairesPDF() {
     const pageH = doc.internal.pageSize.height; // 210mm en paysage
     const mL = 14, mR = 14;
 
-    // Identité
+    // Identité et année scolaire
     const nom = (document.getElementById("nomAgent")?.value || "Agent").toUpperCase();
     const prenom = document.getElementById("prenomAgent")?.value || "";
-    const quotiteEl = document.getElementById("quotiteSelect");
-    const quotite = quotiteEl ? quotiteEl.value + " %" : "100 %";
+    const anneeSelectEl = document.getElementById("anneeScolaireSelect");
+    const anneeScolaire = anneeSelectEl ? anneeSelectEl.options[anneeSelectEl.selectedIndex].text : "";
+    const posteAgent = (document.getElementById("posteAgent")?.value || "").trim();
 
     // ── EN-TÊTE ─────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
-    doc.text("HORAIRES HEBDOMADAIRES — SEMAINE TYPE", mL, 20);
+
+    // 1. Titre mis à jour de manière dynamique avec l'année scolaire
+    doc.text(`Horaires hebdomadaires - Année scolaire ${anneeScolaire}`, mL, 20);
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
-    doc.text(`Agent : ${prenom} ${nom}   |   Quotité : ${quotite}`, mL, 29);
+
+    // 2. Logique conditionnelle : Si le poste est renseigné, on l'affiche à la place de la quotité.
+    // Sinon, on affiche uniquement l'identité de l'agent sans mention alternative.
+    if (posteAgent !== "") {
+        doc.text(`Agent : ${prenom} ${nom}   |   Poste : ${posteAgent}`, mL, 29);
+    } else {
+        doc.text(`Agent : ${prenom} ${nom}`, mL, 29);
+    }
 
     doc.setDrawColor(grisLeger[0], grisLeger[1], grisLeger[2]);
     doc.setLineWidth(0.5);

@@ -121,6 +121,10 @@ button:hover {
     color: red;
 }
 
+.poste-row {
+    margin-top: 16px;
+}
+
 .form-row {
     display: flex;
     gap: 10px;
@@ -441,6 +445,7 @@ button:hover {
     }
 
 }
+
 /* ==========================================================
    TOASTS & MODALE DE CONFIRMATION
 ========================================================== */
@@ -465,7 +470,7 @@ button:hover {
     max-width: 380px;
     padding: 12px 16px;
     border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
     font-size: 0.92em;
     font-family: Arial, sans-serif;
     color: #fff;
@@ -476,32 +481,56 @@ button:hover {
     animation-delay: 0s, var(--toast-duree, 3s);
 }
 
-.toast.succes  { background: #27ae60; }
-.toast.info    { background: #3498db; }
-.toast.erreur  { background: #e74c3c; }
+.toast.succes {
+    background: #27ae60;
+}
 
-.toast-icone { font-size: 1.2em; flex-shrink: 0; }
+.toast.info {
+    background: #3498db;
+}
+
+.toast.erreur {
+    background: #e74c3c;
+}
+
+.toast-icone {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
 
 @keyframes toastEntree {
-    to { opacity: 1; transform: translateX(0); }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
+
 @keyframes toastSortie {
-    from { opacity: 1; transform: translateX(0); }
-    to   { opacity: 0; transform: translateX(30px); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(30px);
+    }
 }
 
 /* Modale de confirmation */
 #modale-confirm {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9998;
 }
 
-#modale-confirm.cache { display: none; }
+#modale-confirm.cache {
+    display: none;
+}
 
 #modale-confirm-boite {
     background: #fff;
@@ -509,7 +538,7 @@ button:hover {
     padding: 28px 24px 20px;
     max-width: 380px;
     width: 90%;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
     text-align: center;
 }
 
@@ -551,12 +580,25 @@ button:hover {
     margin: 0;
 }
 
-#modale-confirm-boite .btn-annuler:hover  { background: #888; }
-#modale-confirm-boite .btn-confirmer:hover { background: #c0392b; }
+#modale-confirm-boite .btn-annuler:hover {
+    background: #888;
+}
+
+#modale-confirm-boite .btn-confirmer:hover {
+    background: #c0392b;
+}
 
 @media (max-width: 480px) {
-    #toast-container { bottom: 12px; right: 12px; left: 12px; }
-    .toast { min-width: unset; max-width: unset; }
+    #toast-container {
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+    }
+
+    .toast {
+        min-width: unset;
+        max-width: unset;
+    }
 }
 
 /* ==========================================================
@@ -640,10 +682,21 @@ button:hover {
 }
 
 /* États de couleur */
-.progression-barre-remplissage.bleue   { background: #3498db; }
-.progression-barre-remplissage.orange  { background: #f39c12; }
-.progression-barre-remplissage.verte   { background: #27ae60; }
-.progression-barre-remplissage.rouge   { background: #e74c3c; }
+.progression-barre-remplissage.bleue {
+    background: #3498db;
+}
+
+.progression-barre-remplissage.orange {
+    background: #f39c12;
+}
+
+.progression-barre-remplissage.verte {
+    background: #27ae60;
+}
+
+.progression-barre-remplissage.rouge {
+    background: #e74c3c;
+}
 
 .progression-pct {
     font-size: 1em;
@@ -662,9 +715,20 @@ button:hover {
     white-space: nowrap;
 }
 
-.progression-badge.atteint    { background: #d5f5e3; color: #1e8449; }
-.progression-badge.depasse    { background: #fadbd8; color: #c0392b; }
-.progression-badge.approche   { background: #fdebd0; color: #d35400; }
+.progression-badge.atteint {
+    background: #d5f5e3;
+    color: #1e8449;
+}
+
+.progression-badge.depasse {
+    background: #fadbd8;
+    color: #c0392b;
+}
+
+.progression-badge.approche {
+    background: #fdebd0;
+    color: #d35400;
+}
 
 /* Ligne de chiffres clés */
 .progression-detail {
