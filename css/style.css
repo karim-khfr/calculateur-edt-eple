@@ -746,3 +746,90 @@ button:hover {
 .progression-detail strong {
     color: #2c3e50;
 }
+/* ==========================================================
+   CORRECTIFS AUDIT — LOT 1
+========================================================== */
+.btn-danger {
+    background: #c0392b;
+}
+
+.btn-danger:hover,
+.btn-danger:focus-visible {
+    background: #922b21;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+    background: #565e64;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.tab:focus-visible {
+    outline: 3px solid #1f6fb2;
+    outline-offset: 2px;
+}
+
+.champ-honeypot {
+    display: none !important;
+}
+
+.contact-confidentialite {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.modale-duplication {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.modale-duplication__boite {
+    width: min(420px, 100%);
+    padding: 24px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modale-duplication__boite h3 {
+    margin: 0 0 12px;
+}
+
+.modale-duplication__liste {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.modale-duplication__liste label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.modale-duplication__liste input {
+    width: auto;
+    margin: 0;
+}
+
+.modale-duplication__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
