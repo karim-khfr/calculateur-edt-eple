@@ -891,7 +891,6 @@ function mettreAJourProgression(totalHeures, referenceHeures) {
     const realise = document.getElementById('prog-realise');
     const objectif = document.getElementById('prog-objectif');
     const resteWrap = document.getElementById('prog-reste-wrap');
-    const reste = document.getElementById('prog-reste');
     if (!remplissage || !pct) return;
 
     // Seuil d'approche : 5 heures avant l'objectif
@@ -949,13 +948,31 @@ function mettreAJourProgression(totalHeures, referenceHeures) {
     realise.textContent = fmtH(totalHeures);
     objectif.textContent = fmtH(referenceHeures);
 
+    // La zone est reconstruite de façon cohérente à chaque mise à jour.
+    // Ne pas utiliser l'ancienne référence `reste`, car innerHTML peut l'avoir supprimée.
+    resteWrap.replaceChildren();
+
+    const valeurEcart = document.createElement('strong');
+
     if (depasse) {
-        resteWrap.innerHTML = `Excédent : <strong style="color:#c0392b">+ ${fmtH(ecartH)}</strong>`;
+        resteWrap.append(document.createTextNode('Excédent : '));
+
+        valeurEcart.textContent = `+ ${fmtH(ecartH)}`;
+        valeurEcart.style.color = '#c0392b';
+
+        resteWrap.appendChild(valeurEcart);
     } else if (atteint) {
-        resteWrap.innerHTML = `<strong style="color:#1e8449">Objectif atteint ✓</strong>`;
+        valeurEcart.textContent = 'Objectif atteint ✓';
+        valeurEcart.style.color = '#1e8449';
+
+        resteWrap.appendChild(valeurEcart);
     } else {
-        reste.textContent = fmtH(referenceHeures - totalHeures);
-        resteWrap.innerHTML = `Reste : <strong id="prog-reste">${fmtH(referenceHeures - totalHeures)}</strong>`;
+        resteWrap.append(document.createTextNode('Reste : '));
+
+        valeurEcart.id = 'prog-reste';
+        valeurEcart.textContent = fmtH(referenceHeures - totalHeures);
+
+        resteWrap.appendChild(valeurEcart);
     }
 }
 
