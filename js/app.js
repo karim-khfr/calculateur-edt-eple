@@ -1082,112 +1082,216 @@ function exporterModeEmploiPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
 
-    // Couleurs de la charte graphique (Élégant & Moderne)
-    const bleuPrimaire = [0, 0, 145]; // #000091
-    const rougeAccent = [201, 25, 30]; // #c9191e
+    // Correction ciblée : cet export ne modifie aucune donnée de l'application.
+    const bleuPrimaire = [0, 0, 145];
+    const rougeAccent = [201, 25, 30];
     const grisTexte = [60, 60, 60];
+    const largeurTexte = 182;
+    const limiteBasPage = 275;
+
+    function ajouterPageSiNecessaire(hauteurNecessaire = 8) {
+        if (y + hauteurNecessaire > limiteBasPage) {
+            doc.addPage();
+            y = 20;
+        }
+    }
+
+    function ecrireTexte(texte, {
+        taille = 10,
+        style = 'normal',
+        couleur = grisTexte,
+        retrait = 0,
+        prefixe = '',
+        espacementApres = 2.5,
+        interligne = 5.5
+    } = {}) {
+        const contenu = String(texte || '').trim();
+        if (!contenu) return;
+
+        doc.setFont('helvetica', style);
+        doc.setFontSize(taille);
+        doc.setTextColor(couleur[0], couleur[1], couleur[2]);
+
+        const lignes = doc.splitTextToSize(
+            `${prefixe}${contenu}`,
+            largeurTexte - retrait
+        );
+
+        lignes.forEach(ligne => {
+            ajouterPageSiNecessaire(interligne);
+            doc.text(ligne, 14 + retrait, y);
+            y += interligne;
+        });
+
+        y += espacementApres;
+    }
 
     // --- EN-TÊTE DU DOCUMENT ---
-    doc.setFont("helvetica", "bold");
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
-    doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
+    doc.setTextColor(...bleuPrimaire);
     doc.text("Mode d'emploi", 14, 20);
 
     doc.setFontSize(13);
     doc.setTextColor(110, 110, 110);
-    doc.text("Outil de calcul du temps de travail EPLE", 14, 27);
+    doc.text('Outil de calcul du temps de travail EPLE', 14, 27);
 
-    // Ajout du lien vers la version en ligne demandé
     doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(rougeAccent[0], rougeAccent[1], rougeAccent[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...rougeAccent);
     doc.text("Version en ligne de l'application :", 14, 35);
 
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0, 0, 238); // Bleu standard pour un lien cliquable
-    doc.text("https://karim-khfr.github.io/calculateur-edt-eple/", 73, 35);
-    doc.link(73, 32, 85, 4, { url: "https://karim-khfr.github.io/calculateur-edt-eple/" });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 238);
+    doc.text('https://karim-khfr.github.io/calculateur-edt-eple/', 73, 35);
+    doc.link(73, 32, 85, 4, {
+        url: 'https://karim-khfr.github.io/calculateur-edt-eple/'
+    });
 
-    // Ligne de séparation élégante sous l'en-tête
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.5);
     doc.line(14, 39, 196, 39);
 
-    let y = 48; // Position de départ pour le contenu dynamique
+    let y = 48;
 
-    // --- PARSAGE DYNAMIQUE DU CONTENU DE L'ONGLET ---
-    // On cible le conteneur du guide dans l'index.html
     const conteneurGuide = document.getElementById('guide');
+    const sectionGuide = conteneurGuide?.querySelector('.section');
 
-    if (!conteneurGuide) {
-        // Sécurité au cas où l'id de l'onglet est différent
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
-        doc.text("Le contenu du mode d'emploi n'a pas pu être extrait.", 14, y);
-        doc.save("Mode_d_emploi_Calculateur.pdf");
+    if (!sectionGuide) {
+        ecrireTexte("Le contenu du mode d'emploi n'a pas pu être extrait.");
+        doc.save('Mode_d_emploi_Calculateur.pdf');
         return;
     }
 
-    // Extraction de tous les éléments textuels et structurels (titres, paragraphes, listes)
-    const elements = conteneurGuide.querySelectorAll('h2, h3, p, li');
+    // Parcours des enfants directs : conserve l'ordre du HTML sans exporter deux fois
+    // les contenus imbriqués des listes et des tableaux.
+    Array.from(sectionGuide.children).forEach(element => {
+        const tag = element.tagName;
 
-    elements.forEach(el => {
-        // Sécurité de saut de page si on arrive en bas de feuille
-        if (y > 275) {
-            doc.addPage();
-            y = 20;
+        // Le bouton de téléchargement et les séparateurs visuels ne sont pas du contenu.
+        if (tag === 'BUTTON' || tag === 'HR') return;
+
+        if (tag === 'H2') {
+            y += 4;
+            ecrireTexte(element.textContent, {
+                taille: 14,
+                style: 'bold',
+                couleur: bleuPrimaire,
+                espacementApres: 3,
+                interligne: 7
+            });
+            return;
         }
 
-        const texte = el.textContent.trim();
-        if (!texte) return;
-
-        // Masquer le bouton d'export ou le texte du lien s'il est déjà écrit en brut dans le HTML
-        if (texte.includes("Exporter") || texte.includes("Version en ligne")) return;
-
-        if (el.tagName === 'H2') {
-            y += 4; // Espace avant titre principal
-            if (y > 275) { doc.addPage(); y = 20; }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(bleuPrimaire[0], bleuPrimaire[1], bleuPrimaire[2]);
-            doc.text(texte, 14, y);
-            y += 8;
-        }
-        else if (el.tagName === 'H3') {
+        if (tag === 'H3') {
             y += 2;
-            if (y > 275) { doc.addPage(); y = 20; }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(rougeAccent[0], rougeAccent[1], rougeAccent[2]);
-            doc.text(texte, 14, y);
-            y += 6;
+            ecrireTexte(element.textContent, {
+                taille: 11,
+                style: 'bold',
+                couleur: rougeAccent,
+                espacementApres: 2,
+                interligne: 6
+            });
+            return;
         }
-        else if (el.tagName === 'LI') {
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
 
-            // Formatage de la puce pour les listes
-            const lignesPuce = doc.splitTextToSize(`•  ${texte}`, 182);
-            lignesPuce.forEach(ligne => {
-                if (y > 275) { doc.addPage(); y = 20; }
-                doc.text(ligne, 14, y);
-                y += 5.5;
+        if (tag === 'P') {
+            ecrireTexte(element.textContent);
+            return;
+        }
+
+        if (tag === 'UL' || tag === 'OL') {
+            Array.from(element.children).forEach((li, index) => {
+                const prefixe = tag === 'OL' ? `${index + 1}.  ` : '•  ';
+                ecrireTexte(li.textContent, {
+                    retrait: 2,
+                    prefixe,
+                    espacementApres: 1,
+                    interligne: 5.5
+                });
             });
             y += 1;
+            return;
         }
-        else if (el.tagName === 'P') {
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.setTextColor(grisTexte[0], grisTexte[1], grisTexte[2]);
 
-            const lignesParagraphe = doc.splitTextToSize(texte, 182);
-            lignesParagraphe.forEach(ligne => {
-                if (y > 275) { doc.addPage(); y = 20; }
-                doc.text(ligne, 14, y);
+        if (tag === 'DIV' && element.classList.contains('result')) {
+            ajouterPageSiNecessaire(16);
+            doc.setFillColor(232, 244, 252);
+            doc.setDrawColor(52, 152, 219);
+
+            const lignes = doc.splitTextToSize(element.textContent.trim(), largeurTexte - 8);
+            const hauteurBloc = Math.max(14, lignes.length * 5.5 + 7);
+
+            if (y + hauteurBloc > limiteBasPage) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFillColor(232, 244, 252);
+            doc.rect(14, y - 4, largeurTexte, hauteurBloc, 'F');
+            doc.setDrawColor(52, 152, 219);
+            doc.setLineWidth(1);
+            doc.line(14, y - 4, 14, y - 4 + hauteurBloc);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...grisTexte);
+            lignes.forEach(ligne => {
+                doc.text(ligne, 18, y + 2);
                 y += 5.5;
             });
-            y += 2.5; // Espacement après paragraphe
+            y += 5;
+            return;
+        }
+
+        if (tag === 'TABLE') {
+            ajouterPageSiNecessaire(20);
+
+            const entetes = Array.from(element.querySelectorAll('thead th'))
+                .map(cellule => cellule.textContent.trim());
+
+            const lignes = Array.from(element.querySelectorAll('tbody tr'))
+                .map(ligne => Array.from(ligne.cells)
+                    .map(cellule => cellule.textContent.trim()));
+
+            if (typeof doc.autoTable === 'function' && lignes.length > 0) {
+                doc.autoTable({
+                    startY: y,
+                    head: entetes.length ? [entetes] : undefined,
+                    body: lignes,
+                    margin: { left: 14, right: 14 },
+                    styles: {
+                        font: 'helvetica',
+                        fontSize: 9,
+                        textColor: grisTexte,
+                        cellPadding: 2.5,
+                        overflow: 'linebreak'
+                    },
+                    headStyles: {
+                        fillColor: [242, 242, 242],
+                        textColor: [44, 62, 80],
+                        fontStyle: 'bold'
+                    },
+                    theme: 'grid'
+                });
+                y = doc.lastAutoTable.finalY + 6;
+            } else {
+                // Repli lisible si autoTable n'est pas disponible.
+                if (entetes.length) {
+                    ecrireTexte(entetes.join(' — '), {
+                        style: 'bold',
+                        espacementApres: 1
+                    });
+                }
+                lignes.forEach(ligne => {
+                    ecrireTexte(ligne.join(' — '), {
+                        retrait: 2,
+                        prefixe: '•  ',
+                        espacementApres: 1
+                    });
+                });
+                y += 3;
+            }
         }
     });
 
@@ -1196,13 +1300,12 @@ function exporterModeEmploiPDF() {
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(150, 150, 150);
-        doc.text(`Page ${i}/${totalPages}`, 196, 287, { align: "right" });
+        doc.text(`Page ${i}/${totalPages}`, 196, 287, { align: 'right' });
     }
 
-    // Téléchargement du fichier
-    doc.save("Mode_d_emploi_Calculateur.pdf");
+    doc.save('Mode_d_emploi_Calculateur.pdf');
 }
 
 // ==========================================
