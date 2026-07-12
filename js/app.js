@@ -1,3 +1,281 @@
+// VERSION AUTONOME COMPATIBLE file:// — modules intégrés sans import/export.
+
+// ===== MODULE INTÉGRÉ : calculs.js =====
+// Fonctions métier pures : aucune dépendance au DOM.
+function parseHoraire(str) {
+    if (!str) return null;
+    const valeur = String(str).trim().replace(',', '.');
+
+    if (valeur.includes(':')) {
+        const parts = valeur.split(':');
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+    }
+
+    const valeurDecimale = parseFloat(valeur);
+    return Number.isNaN(valeurDecimale) ? null : Math.round(valeurDecimale * 60);
+}
+
+function formatMinutes(totalMin) {
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${h}h ${String(m).padStart(2, '0')}`;
+}
+
+function parseDecimal(str) {
+    if (!str) return 0;
+    const val = parseFloat(String(str).replace(',', '.'));
+    return Number.isNaN(val) ? 0 : val;
+}
+
+function formatResultatHeures(totalHeures) {
+    const entier = Math.floor(totalHeures);
+    const minutes = Math.round((totalHeures - entier) * 60);
+    return `${entier}h ${String(minutes).padStart(2, '0')} (${totalHeures.toFixed(2)}h)`;
+}
+
+function obtenirHeuresPourSemaine(heuresSaisies, estVacances, horaireType = '00:00') {
+    const valeurSaisie = String(heuresSaisies ?? '').trim();
+    if (valeurSaisie !== '') return valeurSaisie;
+    return estVacances ? '00:00' : (horaireType || '00:00');
+}
+
+function getNumeroSemaineISO(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function formaterDateVersChaine(date) {
+    const j = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${j}/${m}/${date.getFullYear()}`;
+}
+
+function validerFormatHoraire(valeur) {
+    if (!valeur || valeur.trim() === '') return 'vide';
+
+    const str = valeur.trim().replace(',', '.');
+    if (str.includes(':')) {
+        const parts = str.split(':');
+        if (parts.length !== 2) return 'invalide';
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (Number.isNaN(h) || Number.isNaN(m) || parts[1].trim() === '') return 'invalide';
+        if (h > 23 || m > 59) return 'impossible';
+        return 'ok';
+    }
+
+    const dec = parseFloat(str);
+    if ((!Number.isNaN(dec) && str === String(dec)) || /^\d+(\.\d+)?$/.test(str)) {
+        return dec > 23.99 ? 'impossible' : 'ok';
+    }
+
+    return 'invalide';
+}
+
+// ===== MODULE INTÉGRÉ : ui.js =====
+function afficherToast(message, type = 'info', duree = 3500) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const icones = { succes: '✅', info: 'ℹ️', erreur: '❌' };
+    const toast = document.createElement('div');
+    const icone = document.createElement('span');
+    const texte = document.createElement('span');
+
+    toast.className = `toast ${type}`;
+    toast.style.setProperty('--toast-duree', `${duree / 1000}s`);
+    icone.className = 'toast-icone';
+    icone.textContent = icones[type] || 'ℹ️';
+    texte.textContent = String(message);
+
+    toast.append(icone, texte);
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), duree + 400);
+}
+
+// ===== MODULE INTÉGRÉ : calendrier-api.js =====
+const DELAI_MAX_API_MS = 8000;
+const CACHE_PREFIX = 'eple_calendrier_v2:';
+const cacheMemoire = new Map();
+let requeteCalendrierActive = null;
+
+// Table de repli versionnée. Elle remplace l'ancienne règle approximative
+// « à partir du 4 juillet ». À actualiser lors des publications officielles.
+const VACANCES_ETE_PAR_ANNEE_SCOLAIRE = Object.freeze({
+    2023: { debut: '2024-07-06', fin: '2024-09-01', version: '2024-01' },
+    2024: { debut: '2025-07-05', fin: '2025-09-01', version: '2025-01' },
+    2025: { debut: '2026-07-04', fin: '2026-09-01', version: '2026-01' },
+    2026: { debut: '2027-07-03', fin: '2027-09-01', version: '2026-07' },
+    2027: { debut: '2028-07-08', fin: '2028-09-01', version: '2026-07' }
+});
+
+function creerCleCache(anneeDepart, zone) {
+    return `${anneeDepart}:${zone}`;
+}
+
+function lireCacheSession(cle) {
+    try {
+        const raw = sessionStorage.getItem(CACHE_PREFIX + cle);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        return {
+            vacances: data.vacances.map(v => ({ ...v, debut: new Date(v.debut), fin: new Date(v.fin) })),
+            joursFeries: data.joursFeries
+        };
+    } catch {
+        return null;
+    }
+}
+
+function ecrireCacheSession(cle, data) {
+    try {
+        sessionStorage.setItem(CACHE_PREFIX + cle, JSON.stringify(data));
+    } catch {
+        // Le cache est une optimisation : son échec ne doit jamais bloquer l'outil.
+    }
+}
+
+async function fetchAvecSignal(url, signal) {
+    const response = await fetch(url, { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response;
+}
+
+function ajouterVacancesEteVersionnees(vacances, anneeDepart) {
+    const config = VACANCES_ETE_PAR_ANNEE_SCOLAIRE[anneeDepart];
+    if (!config) return vacances;
+
+    const debutEte = new Date(`${config.debut}T00:00:00`);
+    const finEte = new Date(`${config.fin}T00:00:00`);
+
+    // Une véritable période estivale doit couvrir une durée significative et
+    // chevaucher la plage officielle versionnée. Une simple entrée « fin des cours »
+    // ne suffit donc plus à neutraliser le repli.
+    const contientDejaEte = vacances.some(v => {
+        const debut = new Date(v.debut);
+        const fin = new Date(v.fin);
+        const dureeJours = (fin - debut) / 86400000;
+        const chevaucheEte = debut <= finEte && fin >= debutEte;
+        return chevaucheEte && dureeJours >= 30;
+    });
+
+    if (contientDejaEte) return vacances;
+
+    return [...vacances, {
+        nom: "Vacances d'Été",
+        debut: debutEte,
+        fin: finEte,
+        source: `table-statique-${config.version}`
+    }];
+}
+
+async function chargerVacances(anneeDepart, zone, signal) {
+    const anneeFin = anneeDepart + 1;
+    const url = `https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?where=annee_scolaire%3D%22${anneeDepart}-${anneeFin}%22%20and%20zones%3D%22Zone%20${zone}%22&limit=100`;
+    const response = await fetchAvecSignal(url, signal);
+    const data = await response.json();
+    const vacances = (data.results || []).map(record => ({
+        nom: record.description || 'Vacances',
+        debut: new Date(record.start_date),
+        fin: new Date(record.end_date),
+        source: 'api-education'
+    }));
+    return ajouterVacancesEteVersionnees(vacances, anneeDepart);
+}
+
+async function chargerJoursFeries(anneeDepart, signal) {
+    const [res1, res2] = await Promise.all([
+        fetchAvecSignal(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart}.json`, signal),
+        fetchAvecSignal(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart + 1}.json`, signal)
+    ]);
+    const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+    return { ...data1, ...data2 };
+}
+
+async function chargerDonneesCalendrier(anneeDepart, zone) {
+    const cle = creerCleCache(anneeDepart, zone);
+    const cached = cacheMemoire.get(cle) || lireCacheSession(cle);
+    if (cached) {
+        // Réappliquer systématiquement le repli versionné aux données du cache.
+        // Cela garantit que les anciens caches incomplets ne masquent pas l'été.
+        const cachedCorrige = {
+            ...cached,
+            vacances: ajouterVacancesEteVersionnees(cached.vacances || [], anneeDepart)
+        };
+        cacheMemoire.set(cle, cachedCorrige);
+        ecrireCacheSession(cle, cachedCorrige);
+        return { ...cachedCorrige, depuisCache: true, erreurs: [] };
+    }
+
+    requeteCalendrierActive?.abort();
+    const controller = new AbortController();
+    requeteCalendrierActive = controller;
+    const timer = setTimeout(() => controller.abort(), DELAI_MAX_API_MS);
+
+    try {
+        const [vacancesResult, feriesResult] = await Promise.allSettled([
+            chargerVacances(anneeDepart, zone, controller.signal),
+            chargerJoursFeries(anneeDepart, controller.signal)
+        ]);
+
+        if (controller.signal.aborted) {
+            throw new DOMException('Chargement du calendrier annulé', 'AbortError');
+        }
+
+        const erreurs = [];
+        let vacances = [];
+        let joursFeries = {};
+
+        if (vacancesResult.status === 'fulfilled') {
+            vacances = vacancesResult.value;
+        } else {
+            erreurs.push({ source: 'vacances', erreur: vacancesResult.reason });
+            vacances = ajouterVacancesEteVersionnees([], anneeDepart);
+        }
+
+        if (feriesResult.status === 'fulfilled') {
+            joursFeries = feriesResult.value;
+        } else {
+            erreurs.push({ source: 'joursFeries', erreur: feriesResult.reason });
+        }
+
+        const data = { vacances, joursFeries };
+        cacheMemoire.set(cle, data);
+        ecrireCacheSession(cle, data);
+        return { ...data, depuisCache: false, erreurs };
+    } finally {
+        clearTimeout(timer);
+        if (requeteCalendrierActive === controller) requeteCalendrierActive = null;
+    }
+}
+
+// ===== MODULE INTÉGRÉ : export-utils.js =====
+function construireJoursRows(lignesHoraires) {
+    return lignesHoraires.map(({ jour, dm, fm, da, fa, cellules }) => [
+        jour,
+        `${dm || '—'} – ${fm || '—'}`,
+        cellules.heuresMatin?.textContent.trim() || '—',
+        `${da || '—'} – ${fa || '—'}`,
+        cellules.heuresApm?.textContent.trim() || '—',
+        cellules.totalJour?.textContent.trim() || '—'
+    ]);
+}
+
+function convertirJoursRowsPourPaysage(joursRows) {
+    return joursRows.map(([jour, matinRange, hm, apmRange, ha, total]) => {
+        const [dm, fm] = matinRange.split(' – ');
+        const [da, fa] = apmRange.split(' – ');
+        return [jour, dm, fm, hm, da, fa, ha, total];
+    });
+}
+
+
 // ==========================================
 // TOASTS & MODALE DE CONFIRMATION
 // ==========================================
@@ -8,21 +286,6 @@
  * @param {'succes'|'info'|'erreur'} type - Type visuel
  * @param {number} duree    - Durée en ms avant disparition (défaut 3500)
  */
-function afficherToast(message, type = 'info', duree = 3500) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    const icones = { succes: '✅', info: 'ℹ️', erreur: '❌' };
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.style.setProperty('--toast-duree', `${duree / 1000}s`);
-    toast.innerHTML = `<span class="toast-icone">${icones[type] || 'ℹ️'}</span><span>${message}</span>`;
-    container.appendChild(toast);
-
-    // Supprimer le toast après la fin de l'animation de sortie
-    setTimeout(() => toast.remove(), duree + 400);
-}
-
 /**
  * Remplace confirm() par une modale non bloquante.
  * Retourne une Promise<boolean> : true si confirmé, false si annulé.
@@ -80,19 +343,6 @@ function changerOnglet(event, ongletId) {
 // ==========================================
 // UTILITAIRES TRANSVERSES
 // ==========================================
-const DELAI_MAX_API_MS = 8000;
-
-async function fetchAvecTimeout(url, options = {}, delai = DELAI_MAX_API_MS) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), delai);
-
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timer);
-    }
-}
-
 function assainirNomFichier(valeur) {
     return String(valeur || '')
         .trim()
@@ -101,7 +351,7 @@ function assainirNomFichier(valeur) {
         .replace(/_+/g, '_') || 'Agent';
 }
 
-// MODIFICATION LOT 2 — source unique de lecture du tableau des horaires.
+// Source unique de lecture du tableau des horaires.
 // Les références DOM sont conservées pour permettre aux fonctions de validation
 // et de calcul de mettre à jour les cellules sans refaire les mêmes sélecteurs.
 function lireLignesHoraires() {
@@ -130,7 +380,7 @@ function lireLignesHoraires() {
     });
 }
 
-// MODIFICATION LOT 2 — source unique de l'horaire hebdomadaire par défaut.
+// Source unique de l'horaire hebdomadaire par défaut.
 function obtenirHoraireTypeBaseHHMM() {
     const valeurHorsVacances = parseDecimal(document.getElementById('horaireHorsVacances')?.value);
 
@@ -150,12 +400,6 @@ function obtenirHoraireTypeBaseHHMM() {
 }
 
 // Règle métier centralisée : saisie manuelle > vacances à zéro > horaire type.
-function obtenirHeuresPourSemaine(heuresSaisies, estVacances, horaireType = obtenirHoraireTypeBaseHHMM()) {
-    const valeurSaisie = String(heuresSaisies ?? '').trim();
-    if (valeurSaisie !== '') return valeurSaisie;
-    return estVacances ? '00:00' : (horaireType || '00:00');
-}
-
 function ajouterLibellesAccessiblesHoraires() {
     const libelles = [
         ['.debut-matin', 'début matin'],
@@ -302,82 +546,60 @@ function genererOptionsAnneeScolaire() {
 let semaines = [];
 let listeVacancesAPI = [];
 
-function getNumeroSemaineISO(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-}
-
-function formaterDateVersChaine(date) {
-    const j = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const a = date.getFullYear();
-    return `${j}/${m}/${a}`;
-}
-
-async function chargerVacancesDepuisAPI(anneeDepart, zoneChoisie) {
-    const anneeFin = anneeDepart + 1;
-    const url = `https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?where=annee_scolaire%3D%22${anneeDepart}-${anneeFin}%22%20and%20zones%3D%22Zone%20${zoneChoisie}%22&limit=100`;
-
-    try {
-        const response = await fetchAvecTimeout(url);
-        if (!response.ok) throw new Error(`API calendrier scolaire : HTTP ${response.status}`);
-        const data = await response.json();
-        listeVacancesAPI = data.results.map(record => ({
-            nom: record.description || "Vacances",
-            debut: new Date(record.start_date),
-            fin: new Date(record.end_date)
-        }));
-    } catch (error) {
-        console.error("Erreur API Éducation, repli local vide :", error);
-        listeVacancesAPI = [];
-        const raison = error.name === 'AbortError' ? 'délai de réponse dépassé' : 'service indisponible';
-        afficherToast(`Impossible de récupérer le calendrier scolaire (${raison}). Le tableau reste utilisable, mais vérifiez les semaines de vacances.`, 'erreur', 7000);
-        return false;
-    }
-
-    return true;
-}
-
 async function initialiserCalendrierDynamique() {
     const anneeSelect = document.getElementById("anneeScolaireSelect");
     const zoneSelect = document.getElementById("zoneScolaireSelect");
     if (!anneeSelect || !zoneSelect) return;
 
-    const anneeDepart = parseInt(anneeSelect.value);
+    const anneeDepart = parseInt(anneeSelect.value, 10);
     const zoneChoisie = zoneSelect.value;
-
-    // Afficher le spinner
     const spinner = document.getElementById("spinnerCalendrier");
     if (spinner) spinner.style.display = "inline-block";
 
-    // Charger les deux sources en parallèle. Chaque chargeur possède son propre
-    // timeout et son propre repli afin que l'application ne reste jamais bloquée.
     try {
-        await Promise.allSettled([
-            chargerVacancesDepuisAPI(anneeDepart, zoneChoisie),
-            chargerJoursFeriesDepuisAPI(anneeDepart)
-        ]);
+        const resultat = await chargerDonneesCalendrier(anneeDepart, zoneChoisie);
+        listeVacancesAPI = resultat.vacances;
+        listeJoursFeriesAPI = resultat.joursFeries;
+
+        resultat.erreurs.forEach(({ source, erreur }) => {
+            console.error(`Erreur de chargement ${source} :`, erreur);
+            if (source === 'vacances') {
+                afficherToast(
+                    "Le calendrier scolaire en ligne est indisponible. Le repli versionné des vacances d'été reste actif.",
+                    'erreur',
+                    7000
+                );
+            } else {
+                afficherToast(
+                    "Impossible de récupérer les jours fériés. Leur surbrillance ne sera pas affichée.",
+                    'erreur',
+                    7000
+                );
+            }
+        });
+    } catch (error) {
+        if (error.name === 'AbortError') return;
+        console.error("Erreur de chargement du calendrier :", error);
+        afficherToast("Impossible de charger le calendrier demandé.", 'erreur', 7000);
+        return;
     } finally {
         if (spinner) spinner.style.display = "none";
     }
 
-    let dateCurseur = new Date(anneeDepart, 8, 1); // 1er Septembre
-    const jourRentrée = dateCurseur.getDay();
-    if (jourRentrée === 0) {
+    let dateCurseur = new Date(anneeDepart, 8, 1);
+    const jourRentree = dateCurseur.getDay();
+    if (jourRentree === 0) {
         dateCurseur.setDate(dateCurseur.getDate() - 6);
-    } else if (jourRentrée > 1) {
-        dateCurseur.setDate(dateCurseur.getDate() - (jourRentrée - 1));
+    } else if (jourRentree > 1) {
+        dateCurseur.setDate(dateCurseur.getDate() - (jourRentree - 1));
     }
 
     const dateFinAnneeScolaire = new Date(anneeDepart + 1, 8, 1);
     semaines = [];
 
     while (dateCurseur < dateFinAnneeScolaire) {
-        let debutSemaine = new Date(dateCurseur);
-        let finSemaine = new Date(dateCurseur);
+        const debutSemaine = new Date(dateCurseur);
+        const finSemaine = new Date(dateCurseur);
         finSemaine.setDate(finSemaine.getDate() + 5);
 
         semaines.push({
@@ -397,27 +619,14 @@ async function initialiserCalendrierDynamique() {
 function estEnVacances(dateDebut, dateFin) {
     const jeudiSemaine = new Date(dateDebut);
     jeudiSemaine.setDate(jeudiSemaine.getDate() + 3);
-
-    const moisJeudi = jeudiSemaine.getMonth();
-    const jourJeudi = jeudiSemaine.getDate();
-
-    // Seuil de repli approximatif : l'API utilisée n'expose pas toujours les
-    // vacances d'été. Cette valeur doit rester configurable lors d'une future évolution.
-    if (moisJeudi === 7 || (moisJeudi === 6 && jourJeudi >= 4)) {
-        return { enVacances: true, nom: "Vacances d'Été" };
-    }
-
-    if (!listeVacancesAPI || listeVacancesAPI.length === 0) {
-        return { enVacances: false, nom: "Hors vacances" };
-    }
-
     const tJeudi = jeudiSemaine.getTime();
 
-    for (const vacance of listeVacancesAPI) {
+    for (const vacance of listeVacancesAPI || []) {
         if (tJeudi >= vacance.debut.getTime() && tJeudi <= vacance.fin.getTime()) {
             return { enVacances: true, nom: vacance.nom };
         }
     }
+
     return { enVacances: false, nom: "Hors vacances" };
 }
 
@@ -431,29 +640,6 @@ let listeJoursFeriesAPI = {};
 
 // Charge les jours fériés pour deux années civiles (N et N+1)
 // via https://calendrier.api.gouv.fr/jours-feries/metropole/{annee}.json
-async function chargerJoursFeriesDepuisAPI(anneeDepart) {
-    try {
-        const [res1, res2] = await Promise.all([
-            fetchAvecTimeout(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart}.json`),
-            fetchAvecTimeout(`https://calendrier.api.gouv.fr/jours-feries/metropole/${anneeDepart + 1}.json`)
-        ]);
-        if (!res1.ok || !res2.ok) {
-            throw new Error(`API jours fériés : HTTP ${res1.status}/${res2.status}`);
-        }
-        const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
-        // Fusionner les deux années dans un seul dictionnaire
-        listeJoursFeriesAPI = { ...data1, ...data2 };
-    } catch (error) {
-        console.error("Erreur API jours fériés DINUM :", error);
-        listeJoursFeriesAPI = {};
-        const raison = error.name === 'AbortError' ? 'délai de réponse dépassé' : 'service indisponible';
-        afficherToast(`Impossible de récupérer les jours fériés (${raison}). Leur surbrillance ne sera pas affichée.`, 'erreur', 7000);
-        return false;
-    }
-
-    return true;
-}
-
 // Retourne la liste des jours fériés tombant dans une semaine (lundi→samedi)
 // sous la forme [{date, nom}, ...]
 function getJoursFeriesDansSemaine(dateDebutSemaine, dateFinSemaine) {
@@ -555,7 +741,7 @@ async function changerConfigurationCalendrier() {
 function mettreAJourInfoAnneeScolaire() {
     const anneeSelect = document.getElementById("anneeScolaireSelect");
     if (!anneeSelect) return;
-    const annee = parseInt(anneeSelect.value);
+    const annee = parseInt(anneeSelect.value, 10);
     const anneeSuivante = annee + 1;
 
     // Calculer le 1er septembre de l'année de départ pour trouver le premier lundi
@@ -600,30 +786,6 @@ function mettreAJourInfoAnneeScolaire() {
  * - 'invalide'  : format non reconnu (ex: "abc", "13:", "25h30")
  * - 'impossible': heure > 23 ou minutes > 59
  */
-function validerFormatHoraire(valeur) {
-    if (!valeur || valeur.trim() === '') return 'vide';
-
-    const str = valeur.trim().replace(',', '.');
-
-    if (str.includes(':')) {
-        const parts = str.split(':');
-        if (parts.length !== 2) return 'invalide';
-        const h = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10);
-        if (isNaN(h) || isNaN(m) || parts[1].trim() === '') return 'invalide';
-        if (h > 23 || m > 59) return 'impossible';
-        return 'ok';
-    }
-
-    const dec = parseFloat(str);
-    if (!isNaN(dec) && str === String(dec) || /^\d+(\.\d+)?$/.test(str)) {
-        if (dec > 23.99) return 'impossible';
-        return 'ok';
-    }
-
-    return 'invalide';
-}
-
 /**
  * Applique le style visuel sur un champ selon son état de validation.
  */
@@ -706,32 +868,6 @@ function validerTableauHoraires() {
 // ==========================================
 // CALCULS DES HORAIRES HEBDOMADAIRES (ONGLET 2)
 // ==========================================
-function parseHoraire(str) {
-    if (!str) return null;
-    str = String(str).trim().replace(',', '.');
-
-    if (str.includes(':')) {
-        const parts = str.split(':');
-        const h = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10);
-        if (isNaN(h) || isNaN(m)) return null;
-        return h * 60 + m;
-    }
-
-    const valeurDecimale = parseFloat(str);
-    if (!isNaN(valeurDecimale)) {
-        return Math.round(valeurDecimale * 60);
-    }
-
-    return null;
-}
-
-function formatMinutes(totalMin) {
-    const h = Math.floor(totalMin / 60);
-    const m = totalMin % 60;
-    return `${h}h ${String(m).padStart(2, '0')}`;
-}
-
 function calculerTotalHebdo() {
     let totalMinutesGeneral = 0;
 
@@ -804,18 +940,6 @@ function updateQuotiteAndResults() {
 // ==========================================
 // CALCULS DES RÉSULTATS GENERAUX (ONGLET 4)
 // ==========================================
-function parseDecimal(str) {
-    if (!str) return 0;
-    const val = parseFloat(String(str).replace(',', '.'));
-    return isNaN(val) ? 0 : val;
-}
-
-function formatResultatHeures(totalHeures) {
-    const entier = Math.floor(totalHeures);
-    const minutes = Math.round((totalHeures - entier) * 60);
-    return `${entier}h ${String(minutes).padStart(2, '0')} (${totalHeures.toFixed(2)}h)`;
-}
-
 function calculerResultats() {
     let totalMinutesScolaire = 0;
     let totalMinutesVacances = 0;
@@ -1399,14 +1523,7 @@ function exporterPDF() {
     // ── SECTION 1 : HORAIRES HEBDOMADAIRES (onglet 2) ──────
     sectionTitre("1. Horaires hebdomadaires (semaine type)");
 
-    const joursRows = lireLignesHoraires().map(({ jour, dm, fm, da, fa, cellules }) => [
-        jour,
-        `${dm || '—'} – ${fm || '—'}`,
-        cellules.heuresMatin?.textContent.trim() || '—',
-        `${da || '—'} – ${fa || '—'}`,
-        cellules.heuresApm?.textContent.trim() || '—',
-        cellules.totalJour?.textContent.trim() || '—'
-    ]);
+    const joursRows = construireJoursRows(lireLignesHoraires());
 
     const nbPausesVal = document.getElementById('nbPauses') ? document.getElementById('nbPauses').value : "0";
     const totalHebdoVal = document.getElementById('totalHebdo') ? document.getElementById('totalHebdo').textContent.trim() : "—";
@@ -1646,16 +1763,6 @@ async function resetTableauAnnuel() {
     afficherToast("Tableau annuel réinitialisé.", 'info');
 }
 
-async function resetApplication() {
-    const ok = await confirmerAsync(
-        "Tout effacer et recommencer à zéro ? Cette action est irréversible.",
-        "Tout effacer"
-    );
-    if (!ok) return;
-    localStorage.removeItem('eple_calculateur');
-    window.location.reload();
-}
-
 // ==========================================
 // EXPORT PDF HORAIRES HEBDOMADAIRES
 // ==========================================
@@ -1704,26 +1811,13 @@ function exporterHorairesPDF() {
     doc.line(mL, 33, pageW - mR, 33);
 
     // ── TABLEAU DES JOURS ───────────────────────────────────
-    const joursRows = lireLignesHoraires().map(({ jour, dm, fm, da, fa, cellules }) => [
-        jour,
-        `${dm || '—'} – ${fm || '—'}`,
-        cellules.heuresMatin?.textContent.trim() || '—',
-        `${da || '—'} – ${fa || '—'}`,
-        cellules.heuresApm?.textContent.trim() || '—',
-        cellules.totalJour?.textContent.trim() || '—'
-    ]);
+    const joursRows = construireJoursRows(lireLignesHoraires());
 
     doc.autoTable({
         startY: 39,
         margin: { left: mL, right: mR },
         head: [['Jour', 'Début matin', 'Fin matin', 'H matin', 'Début APM', 'Fin APM', 'H APM', 'Total journalier']],
-        body: joursRows.map(r => {
-            // Séparer les colonnes fusionnées "dm – fm" pour plus de lisibilité en paysage
-            const [jour, matinRange, hm, apmRange, ha, total] = r;
-            const [dm, fm] = matinRange.split(' – ');
-            const [da, fa] = apmRange.split(' – ');
-            return [jour, dm, fm, hm, da, fa, ha, total];
-        }),
+        body: convertirJoursRowsPourPaysage(joursRows),
         theme: 'striped',
         headStyles: {
             fillColor: bleuPrimaire,
@@ -1938,20 +2032,38 @@ document.addEventListener("DOMContentLoaded", function () {
 // RÉINITIALISATION GLOBALE DE L'APPLICATION
 // ==========================================
 async function resetApplication() {
-    // Utilisation de votre modale de confirmation personnalisée
     const confirmation = await confirmerAsync(
         "Voulez-vous vraiment réinitialiser complètement l'outil ? Toutes vos données saisies seront définitivement effacées.",
         "Effacer tout"
     );
 
     if (confirmation) {
-        // Supprime la sauvegarde du calculateur
         localStorage.removeItem('eple_calculateur');
-        // Affiche un toast de succès (optionnel avant rechargement)
         afficherToast("Application réinitialisée. Rechargement...", "succes");
-        // Recharge la page proprement pour remettre tous les champs à zéro
         setTimeout(() => {
             window.location.reload();
         }, 1000);
     }
 }
+
+// Compatibilité avec tous les gestionnaires HTML inline.
+// En script classique, les déclarations sont déjà globales ; cet assignement explicite
+// documente le contrat public et évite toute ambiguïté lors d'un futur refactoring.
+Object.assign(window, {
+    appliquerHorairesHorsVacances,
+    calculerTotalHebdo,
+    changerConfigurationCalendrier,
+    changerOnglet,
+    confirmerReponse,
+    copierTotalHebdo,
+    dupliquerJour,
+    exporterExcel,
+    exporterHorairesPDF,
+    exporterModeEmploiPDF,
+    exporterPDF,
+    resetAgent,
+    resetApplication,
+    resetHorairesHebdo,
+    resetTableauAnnuel,
+    updateQuotiteAndResults
+});
