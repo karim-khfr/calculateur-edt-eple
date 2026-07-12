@@ -1,4 +1,14 @@
-// VERSION AUTONOME COMPATIBLE file:// — modules intégrés sans import/export.
+/*
+ * Outil de calcul du temps de travail EPLE
+ * © 2026 Karim Khenifer
+ *
+ * Distribué selon les conditions définies dans le fichier LICENSE.
+ */
+
+// ======================================================
+// Version de l'application
+// ======================================================
+const APP_VERSION = "1.0";
 
 // ===== MODULE INTÉGRÉ : calculs.js =====
 // Fonctions métier pures : aucune dépendance au DOM.
@@ -1970,6 +1980,8 @@ window.onload = async function () {
 
 // ===== SCRIPT POUR LE FORMULAIRE DE CONTACT =====
 document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("app-version").textContent = APP_VERSION;
+
     // Gestionnaire d'envoi du formulaire de contact avec indicateur de chargement
     const contactForm = document.getElementById('contact-form');
     const btnSubmit = document.getElementById('btn-contact-submit');

@@ -1,12 +1,27 @@
-# Outil de calcul du temps de travail EPLE
+# TempoEPLE
 
 Application web développée en HTML, CSS et JavaScript permettant de calculer le temps de travail annuel des personnels exerçant en EPLE (Établissements Publics Locaux d'Enseignement) et d'établir leurs emplois du temps.
 
+Version en ligne :
+https://karim-khfr.github.io/calculateur-edt-eple/
+
 ## Présentation
 
-Cet outil a été conçu pour faciliter la gestion du temps de travail des agents sur l'année scolaire 2026-2027 et les années suivantes.
+Cet outil a été conçu pour faciliter la gestion du temps de travail des agents sur l'année scolaire sélectionnée par l'utilisateur.
 
 Il permet de calculer automatiquement les obligations de service en fonction de la quotité de travail, de suivre les heures effectuées semaine par semaine, de prendre en compte les heures supplémentaires et les récupérations, puis de générer un bilan annuel complet exportable au format PDF.
+
+## Pourquoi ce projet ?
+
+Les personnels administratifs et ITRF des EPLE doivent concevoir des emplois du temps respectant des contraintes réglementaires complexes.
+
+Cet outil a été développé pour faciliter ce travail en automatisant les calculs annuels, le suivi hebdomadaire et la génération de documents exploitables.
+
+## Limitations
+
+- nécessite une connexion Internet pour récupérer le calendrier officiel lors du premier chargement ;
+- ne remplace pas la validation par le chef d'établissement ;
+- les dates des vacances scolaires dépendent des données publiées par le ministère.
 
 ## Fonctionnalités
 
@@ -17,13 +32,15 @@ Il permet de calculer automatiquement les obligations de service en fonction de 
 
 ### Quotité de travail
 
-* Saisie du nom et du prénom de l'agent.
+* Saisie du nom, du prénom et du poste occupé par l'agent.
 * Sélection de l'année scolaire (2026-2027, 2027-2028, 2028-2029).
 * Sélection de la zone académique (Zone A, B ou C).
 * Calcul automatique du calendrier scolaire via l'API officielle du Ministère de l'Éducation nationale.
 * Calcul automatique du volume annuel à effectuer en fonction de la quotité de travail.
 * Gestion des quotités de 40 % à 100 %.
 * Affichage du volume de référence en heures et minutes (sans arrondi).
+
+![Accueil](docs/images/onglet1.png)
 
 ### Horaires hebdomadaires
 
@@ -34,6 +51,8 @@ Il permet de calculer automatiquement les obligations de service en fonction de 
 * Prise en compte des pauses de 20 minutes dans les cas où elles doivent être comptabilisées comme temps de travail effectif.
 * Report automatique du total hebdomadaire vers le tableau annuel.
 * Bouton de réinitialisation des horaires hebdomadaires.
+
+![Accueil](docs/images/onglet2.png)
 
 ### Tableau annuel des semaines
 
@@ -47,6 +66,8 @@ Il permet de calculer automatiquement les obligations de service en fonction de 
 * Ajout de commentaires personnalisés.
 * Bouton de réinitialisation du tableau annuel.
 
+![Accueil](docs/images/onglet3.png)
+
 ### Bilan annuel
 
 * Calcul en temps réel :
@@ -57,6 +78,8 @@ Il permet de calculer automatiquement les obligations de service en fonction de 
   * des heures récupérées ;
   * du total général ;
   * de l'écart entre le temps dû et le temps effectué (affiché en vert ou en rouge).
+
+![Accueil](docs/images/onglet4.png)
 
 ### Export PDF du bilan
 
@@ -103,12 +126,26 @@ Quatre niveaux de réinitialisation indépendants :
 
 ## Technologies utilisées
 
+### Front-end
+
 * HTML5
 * CSS3
 * JavaScript (Vanilla JS)
+
+### Bibliothèques
+
 * [jsPDF](https://github.com/parallax/jsPDF)
 * [jsPDF AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable)
+* SheetJS (xlsx) (génération des exports Excel)
+
+### Services externes
+
 * API Données ouvertes du Ministère de l'Éducation nationale (calendrier scolaire)
+* API française des jours fériés (calcul automatique des jours fériés)
+
+### Stockage
+
+* LocalStorage (sauvegarde automatique des données dans le navigateur)
 
 ## Public concerné
 
@@ -131,12 +168,12 @@ Aucune installation ni serveur web ne sont nécessaires. Une connexion Internet 
 
 > Ce projet est fonctionnel et activement maintenu. Il peut encore évoluer en fonction des besoins exprimés par les utilisateurs.
 
+## Signaler un problème
+
+Vous pouvez utiliser les Issues GitHub ou le formulaire de contact intégré dans l'application.
+
 ## Licence
 
-Copyright © 2026 Karim Khenifer
+Ce logiciel est distribué selon les conditions définies dans le fichier `LICENSE`.
 
-Le logiciel peut être utilisé, étudié, copié, modifié et redistribué gratuitement à des fins personnelles, éducatives, administratives ou institutionnelles.
-
-Toute utilisation commerciale, vente, intégration dans une offre commerciale ou prestation rémunérée nécessite l'autorisation écrite préalable de l'auteur.
-
-Les contributions sont les bienvenues et doivent conserver cette licence.
+© 2026 Karim Khenifer.

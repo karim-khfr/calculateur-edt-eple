@@ -1,3 +1,10 @@
+/*
+ * Outil de calcul du temps de travail EPLE
+ * © 2026 Karim Khenifer
+ *
+ * Distribué selon les conditions définies dans le fichier LICENSE.
+ */
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -20,6 +27,21 @@ h1,
 h2,
 h3 {
     color: #2c3e50;
+}
+
+h1 {
+    margin-bottom: 1px;
+    padding-bottom: 1px;
+    line-height: 1;
+}
+
+.subtitle {
+    margin-top: 0px;
+    margin-bottom: 12px;
+    padding-top: 0px;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #555;
 }
 
 .tabs {
@@ -746,6 +768,7 @@ button:hover {
 .progression-detail strong {
     color: #2c3e50;
 }
+
 /* ==========================================================
    CORRECTIFS AUDIT — LOT 1
 ========================================================== */

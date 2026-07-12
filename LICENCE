@@ -1,0 +1,117 @@
+# Licence du logiciel
+
+**TempoEPLE**
+
+Version 1.0 — © 2026 Karim Khenifer
+
+---
+
+## 1. Objet
+
+La présente licence définit les conditions d'utilisation, de reproduction, de modification et de diffusion du logiciel **TempoEPLE**.
+
+L'auteur conserve l'intégralité des droits de propriété intellectuelle sur le logiciel.
+
+---
+
+## 2. Autorisations
+
+Sous réserve du respect des dispositions de la présente licence, toute personne est autorisée à :
+
+* utiliser gratuitement le logiciel ;
+* télécharger et conserver une copie du logiciel ;
+* étudier son fonctionnement ;
+* modifier le code source pour ses propres besoins ;
+* copier et redistribuer gratuitement le logiciel, sous forme originale ou modifiée.
+
+Ces utilisations sont autorisées pour des besoins :
+
+* personnels ;
+* éducatifs ;
+* administratifs ;
+* institutionnels ;
+* associatifs.
+
+---
+
+## 3. Conditions
+
+Toute redistribution du logiciel, modifié ou non, doit :
+
+* conserver le présent fichier de licence ;
+* conserver les mentions de copyright ;
+* mentionner clairement l'auteur d'origine :
+
+> © Karim Khenifer
+
+Si le logiciel est modifié, il est recommandé de préciser la nature des modifications ainsi que leur auteur.
+
+---
+
+## 4. Utilisations interdites sans autorisation
+
+Sauf autorisation écrite préalable de l'auteur, il est interdit de :
+
+* vendre le logiciel ou une version modifiée ;
+* intégrer le logiciel dans une offre commerciale ou un produit commercialisé ;
+* facturer l'utilisation du logiciel ;
+* proposer une prestation rémunérée reposant principalement sur ce logiciel ;
+* supprimer les mentions de copyright ou d'attribution.
+
+Toute utilisation commerciale ou lucrative nécessite une autorisation écrite préalable de l'auteur.
+
+---
+
+## 5. Absence de garantie
+
+Le logiciel est fourni « en l'état ».
+
+L'auteur ne garantit ni son adéquation à un besoin particulier, ni l'absence d'erreurs.
+
+L'utilisateur demeure seul responsable de l'utilisation qu'il fait du logiciel ainsi que des décisions prises sur la base des résultats produits.
+
+---
+
+## 6. Responsabilité
+
+En aucun cas l'auteur ne pourra être tenu responsable des dommages directs ou indirects pouvant résulter de l'utilisation du logiciel, notamment en cas :
+
+* d'erreur de calcul ;
+* de perte de données ;
+* de mauvaise configuration ;
+* d'indisponibilité d'un service tiers (API, navigateur, etc.).
+
+---
+
+## 7. Données externes
+
+Le logiciel utilise notamment :
+
+* les données du calendrier scolaire publiées par le ministère chargé de l'Éducation nationale ;
+* les données relatives aux jours fériés provenant de services publics ou ouverts.
+
+L'auteur ne peut être tenu responsable des erreurs, retards de publication ou indisponibilités de ces services.
+
+---
+
+## 8. Protection des données
+
+Le logiciel fonctionne principalement localement dans le navigateur de l'utilisateur.
+
+Les données saisies sont enregistrées dans le stockage local (LocalStorage) du navigateur.
+
+Le formulaire de contact transmet uniquement les informations saisies par l'utilisateur au service Formspree afin d'acheminer le message vers l'auteur.
+
+---
+
+## 9. Évolution
+
+L'auteur se réserve le droit de publier de nouvelles versions du logiciel ainsi que des versions de la présente licence.
+
+L'utilisation d'une version donnée du logiciel reste régie par la licence qui l'accompagne.
+
+---
+
+## 10. Acceptation
+
+L'utilisation, la copie, la modification ou la redistribution du logiciel implique l'acceptation pleine et entière des dispositions de la présente licence.
