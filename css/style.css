@@ -249,6 +249,18 @@ button:hover {
     margin-left: 0;
 }
 
+.creator-info a {
+    color: #007bff;
+    /* Bleu pour les liens */
+    text-decoration: none;
+    /* Pas de soulignement */
+}
+
+.creator-info a:hover {
+    text-decoration: underline;
+    /* Soulignement au survol */
+}
+
 /* Style du formulaire */
 .contact-container {
     max-width: 100%;
