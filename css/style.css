@@ -856,3 +856,34 @@ textarea:focus-visible,
     justify-content: flex-end;
     gap: 8px;
 }
+
+/* FOOTER */
+.footer {
+    background-color: #f8f9fa;
+    /* Fond clair */
+    color: #495057;
+    /* Texte gris foncé */
+    padding: 20px;
+    text-align: center;
+    font-size: 14px;
+    border-top: 1px solid #e9ecef;
+    /* Ligne séparatrice */
+    margin-top: 30px;
+}
+
+.footer a {
+    color: #007bff;
+    /* Bleu pour les liens */
+    text-decoration: none;
+    /* Pas de soulignement */
+}
+
+.footer a:hover {
+    text-decoration: underline;
+    /* Soulignement au survol */
+}
+
+#app-version {
+    font-weight: bold;
+    /* Version en gras */
+}

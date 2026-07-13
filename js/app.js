@@ -2079,3 +2079,11 @@ Object.assign(window, {
     resetTableauAnnuel,
     updateQuotiteAndResults
 });
+
+// Mettre à jour tous les éléments avec l'ID "app-version"
+document.addEventListener("DOMContentLoaded", function () {
+    const versionElements = document.querySelectorAll("#app-version");
+    versionElements.forEach(element => {
+        element.textContent = APP_VERSION;
+    });
+});
