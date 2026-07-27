@@ -8,7 +8,7 @@
 // ======================================================
 // Version de l'application
 // ======================================================
-const APP_VERSION = "1.0";
+const APP_VERSION = "1.0.0";
 
 // ===== MODULE INTÉGRÉ : calculs.js =====
 // Fonctions métier pures : aucune dépendance au DOM.
