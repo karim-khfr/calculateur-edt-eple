@@ -1,5 +1,16 @@
 # TempoEPLE
 
+[![Dernière Release](https://img.shields.io/github/v/release/karim-khfr/calculateur-edt-eple?style=for-the-badge&color=000091&label=Release)](https://github.com/karim-khfr/calculateur-edt-eple/releases)
+[![Licence](https://img.shields.io/badge/Licence-TempoEPLE-c9191e?style=for-the-badge)](https://github.com/karim-khfr/calculateur-edt-eple/blob/main/LICENSE)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-f7df1e?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+[![Dernier Commit](https://img.shields.io/github/last-commit/karim-khfr/calculateur-edt-eple?style=for-the-badge&color=27ae60&label=Dernier%20commit)](https://github.com/karim-khfr/calculateur-edt-eple/actions)
+
+---
+
+© 2026 Karim Khenifer. Tous droits réservés. Application TempoEPLE.
+
 Application web développée en HTML, CSS et JavaScript permettant de calculer le temps de travail annuel des personnels exerçant en EPLE (Établissements Publics Locaux d'Enseignement) et d'établir leurs emplois du temps.
 
 Version en ligne :
