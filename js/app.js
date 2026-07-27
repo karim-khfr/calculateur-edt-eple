@@ -1,5 +1,5 @@
 /*
- * Outil de calcul du temps de travail EPLE
+ * TempoEPLE - Outil de calcul du temps de travail en EPLE
  * © 2026 Karim Khenifer
  *
  * Distribué selon les conditions définies dans le fichier LICENSE.
